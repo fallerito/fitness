@@ -3,370 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Entrenamiento Dinámico - Con Tiempo Invertido</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-900 text-white min-h-screen">
-    <div id="root"></div>
-
-    <script type="text/babel">
-        // BASE DE DATOS DE EJERCICIOS
-        const EXERCISES_DATABASE = [
-            // PECHO
-            { id: 1, name: "Floor Press en Suelo", muscle: "Pecho", filename: "manc_pecho_01.mp4" },
-            { id: 2, name: "Aperturas en Suelo", muscle: "Pecho", filename: "manc_pecho_02.mp4" },
-            { id: 3, name: "Flexiones / Push-ups", muscle: "Pecho", filename: "body_pecho_01.mp4" },
-
-            // ESPALDA
-            { id: 4, name: "Remo a Un Brazo (7.5kg)", muscle: "Espalda", filename: "manc_espalda_01.mp4" },
-            { id: 5, name: "Remo Inclinado", muscle: "Espalda", filename: "manc_espalda_02.mp4" },
-
-            // HOMBROS
-            { id: 6, name: "Press Militar de Pie", muscle: "Hombro", filename: "manc_hombro_01.mp4" },
-            { id: 7, name: "Elevaciones Laterales", muscle: "Hombro", filename: "manc_hombro_02.mp4" },
-
-            // PIERNAS
-            { id: 8, name: "Sentadilla Goblet", muscle: "Pierna", filename: "manc_pierna_01.mp4" },
-            { id: 9, name: "Zancadas / Lunges", muscle: "Pierna", filename: "manc_pierna_02.mp4" },
-
-            // BRAZOS
-            { id: 10, name: "Curl de Bíceps", muscle: "Brazos", filename: "manc_biceps_01.mp4" },
-            { id: 11, name: "Curl Martillo", muscle: "Brazos", filename: "manc_biceps_02.mp4" },
-            { id: 12, name: "Copa de Tríceps a 2 Manos", muscle: "Brazos", filename: "manc_triceps_01.mp4" }
-        ];
-
-        // CONFIGURACIÓN DE DÍAS Y COMBINACIÓN DE GRUPOS MUSCULARES
-        const DAYS_MAP = {
-            1: { name: "Lunes", title: "Empuje + Hombro Mixto", primaryMuscles: ["Pecho", "Hombro", "Brazos"] },
-            3: { name: "Miércoles", title: "Tracción + Pierna Híbrida", primaryMuscles: ["Espalda", "Pierna", "Brazos"] },
-            5: { name: "Viernes", title: "Fullbody Dinámico", primaryMuscles: ["Pecho", "Espalda", "Pierna"] },
-            6: { name: "Sábado", title: "Burnout Express", primaryMuscles: ["Hombro", "Brazos", "Pierna"] }
-        };
-
-        // COMPONENTE PARA RENDERIZAR VIDEO MP4
-        const ExerciseVideo = ({ basePath, filename, alt, className }) => {
-            const [hasError, setHasError] = React.useState(false);
-
-            const cleanPath = basePath.trim();
-            const normalizedPath = cleanPath ? (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/') : '';
-            const fullSrc = `${normalizedPath}${filename}`;
-
-            React.useEffect(() => {
-                setHasError(false);
-            }, [fullSrc]);
-
-            if (hasError || !filename) {
-                return (
-                    <div className={`${className} bg-gray-800 border border-gray-700 flex flex-col items-center justify-center p-2 text-center rounded-lg`}>
-                        <span className="text-xl mb-1">🎬</span>
-                        <span className="text-[10px] text-gray-400 font-semibold leading-tight">No encontrado</span>
-                        <span className="text-[9px] text-yellow-500 font-mono break-all">{fullSrc}</span>
-                    </div>
-                );
-            }
-
-            return (
-                <video 
-                    src={fullSrc} 
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline 
-                    className={`${className} object-cover rounded-lg`} 
-                    onError={() => setHasError(true)} 
-                />
-            );
-        };
-
-        function App() {
-            const [videoPath, setVideoPath] = React.useState("videos/");
-
-            const [selectedDayIndex, setSelectedDayIndex] = React.useState(() => {
-                const today = new Date().getDay();
-                return DAYS_MAP[today] ? today : 5;
-            });
-
-            const [currentWorkout, setCurrentWorkout] = React.useState([]);
-            const [isWorkoutActive, setIsWorkoutActive] = React.useState(false);
-            const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
-            const [stepTimer, setStepTimer] = React.useState(0);
-            
-            // ESTADO PARA EL TIEMPO TOTAL INVERTIDO
-            const [totalElapsedTime, setTotalElapsedTime] = React.useState(0);
-
-            // GENERADOR DE RUTINA
-            const generateWorkoutForDay = (dayIdx) => {
-                const dayConfig = DAYS_MAP[dayIdx];
-                if (!dayConfig) {
-                    setCurrentWorkout([]);
-                    return;
-                }
-
-                const pool = EXERCISES_DATABASE.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
-                const shuffled = [...pool].sort(() => 0.5 - Math.random());
-
-                if (shuffled.length < 4) return;
-
-                const sequence = [];
-
-                // 1. BLOQUE ESTÁNDAR
-                const stdEx1 = shuffled[0];
-                const stdEx2 = shuffled[1];
-                for (let round = 1; round <= 3; round++) {
-                    sequence.push({
-                        ...stdEx1,
-                        mode: "Estándar (3 Rondas)",
-                        duration: 30,
-                        value: "12-15 reps",
-                        stepTitle: `Ronda ${round} de 3 - ${stdEx1.name}`
-                    });
-                    sequence.push({
-                        ...stdEx2,
-                        mode: "Estándar (3 Rondas)",
-                        duration: 30,
-                        value: "12-15 reps",
-                        stepTitle: `Ronda ${round} de 3 - ${stdEx2.name}`
-                    });
-                }
-
-                // 2. BLOQUE SERIE ÚNICA
-                const singleEx = shuffled[2];
-                sequence.push({
-                    ...singleEx,
-                    mode: "Serie Única (1 Ronda Máxima)",
-                    duration: 45,
-                    value: "Fallo Controlado / Reps Máximas",
-                    stepTitle: `🔥 SERIE ÚNICA INTENSA - ${singleEx.name}`
-                });
-
-                // 3. BLOQUE MINISET EXPRESS
-                const miniSetGroup = shuffled.slice(0, 4);
-                for (let miniRound = 1; miniRound <= 2; miniRound++) {
-                    miniSetGroup.forEach((ex, idx) => {
-                        sequence.push({
-                            ...ex,
-                            mode: `MiniSet 60s (Ronda ${miniRound}/2)`,
-                            duration: 15,
-                            value: "Sin Descanso",
-                            stepTitle: `⚡ MiniSet 60s (${idx + 1}/4) - ${ex.name}`
-                        });
-                    });
-                }
-
-                setCurrentWorkout(sequence);
-            };
-
-            React.useEffect(() => {
-                generateWorkoutForDay(selectedDayIndex);
-            }, [selectedDayIndex]);
-
-            // TEMPORIZADOR DEL PASO ACTUAL Y DEL TIEMPO TOTAL INVERTIDO
-            React.useEffect(() => {
-                let interval = null;
-                if (isWorkoutActive) {
-                    interval = setInterval(() => {
-                        setTotalElapsedTime(prev => prev + 1);
-                        setStepTimer(prev => {
-                            if (prev > 1) {
-                                return prev - 1;
-                            } else {
-                                if (currentStepIndex < currentWorkout.length - 1) {
-                                    const nextIndex = currentStepIndex + 1;
-                                    setCurrentStepIndex(nextIndex);
-                                    return currentWorkout[nextIndex].duration;
-                                } else {
-                                    setIsWorkoutActive(false);
-                                    alert("¡Entrenamiento completado!");
-                                    return 0;
-                                }
-                            }
-                        });
-                    }, 1000);
-                }
-                return () => clearInterval(interval);
-            }, [isWorkoutActive, currentStepIndex, currentWorkout]);
-
-            const startWorkout = () => {
-                if (currentWorkout.length === 0) return;
-                setCurrentStepIndex(0);
-                setStepTimer(currentWorkout[0].duration);
-                setTotalElapsedTime(0);
-                setIsWorkoutActive(true);
-            };
-
-            const stopWorkout = () => {
-                setIsWorkoutActive(false);
-            };
-
-            // FORMATEAR TIEMPO EN MINUTOS Y SEGUNDOS (MM:SS)
-            const formatTime = (seconds) => {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            };
-
-            const activeExercise = currentWorkout[currentStepIndex];
-            const currentDayName = DAYS_MAP[selectedDayIndex]?.name || "Día de Descanso";
-
-            return (
-                <div className="max-w-3xl mx-auto p-4">
-                    {/* CARPETA CONFIGURABLE */}
-                    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4 flex flex-col md:flex-row items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                            <span className="text-xl">📁</span>
-                            <div>
-                                <h3 className="text-xs font-bold text-gray-300 uppercase">Carpeta de Videos</h3>
-                                <p className="text-[11px] text-gray-400">Ruta configurada para los MP4</p>
-                            </div>
-                        </div>
-                        <div className="w-full md:w-1/2">
-                            <input 
-                                type="text" 
-                                value={videoPath} 
-                                onChange={(e) => setVideoPath(e.target.value)}
-                                placeholder="videos/"
-                                className="w-full bg-gray-900 text-green-400 font-mono text-sm px-3 py-2 rounded border border-gray-700 focus:outline-none focus:border-blue-500"
-                            />
-                        </div>
-                    </div>
-
-                    {/* ENCABEZADO Y SELECCIÓN DE DÍA CON TIEMPO INVERTIDO */}
-                    <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div>
-                            <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Día Detectado</span>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                                📅 {currentDayName} 
-                                {DAYS_MAP[new Date().getDay()]?.name === currentDayName && (
-                                    <span className="text-xs bg-green-600/30 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">HOY</span>
-                                )}
-                            </h1>
-                            <p className="text-sm text-gray-400">
-                                {DAYS_MAP[selectedDayIndex]?.title || "Hoy no hay rutina programada."}
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col md:items-end items-center gap-2 w-full md:w-auto">
-                            {/* INDICADOR DE TIEMPO INVERTIDO EN CABECERA */}
-                            {isWorkoutActive && (
-                                <div className="bg-gray-900 border border-blue-500 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow font-mono">
-                                    <span className="text-xs text-gray-400 uppercase font-bold">Tiempo:</span>
-                                    <span className="text-lg font-bold text-blue-400">{formatTime(totalElapsedTime)}</span>
-                                </div>
-                            )}
-
-                            <div className="flex flex-col items-end">
-                                <label className="text-xs text-gray-400 mb-1">Cambiar día manualmente:</label>
-                                <select 
-                                    value={selectedDayIndex} 
-                                    onChange={(e) => {
-                                        setIsWorkoutActive(false);
-                                        setSelectedDayIndex(Number(e.target.value));
-                                    }}
-                                    className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
-                                    <option value={1}>Lunes (Empuje + Hombro)</option>
-                                    <option value={3}>Miércoles (Tracción + Pierna)</option>
-                                    <option value={5}>Viernes (Fullbody Dinámico)</option>
-                                    <option value={6}>Sábado (Burnout Express)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* PANTALLA DE ENTRENAMIENTO EN EJECUCIÓN */}
-                    {isWorkoutActive && activeExercise ? (
-                        <div className="bg-gray-800 p-6 rounded-xl border border-blue-500 shadow-2xl text-center">
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-xs bg-blue-900 text-blue-200 px-3 py-1 rounded-full font-bold">
-                                    Paso {currentStepIndex + 1} de {currentWorkout.length}
-                                </span>
-                                <span className="text-xs bg-yellow-900/60 text-yellow-300 border border-yellow-500/30 px-3 py-1 rounded-full font-bold">
-                                    {activeExercise.mode}
-                                </span>
-                            </div>
-
-                            <div className="w-64 h-64 mx-auto rounded-2xl bg-gray-900 p-2 mb-4 border border-gray-700 flex items-center justify-center shadow-inner overflow-hidden">
-                                <ExerciseVideo 
-                                    basePath={videoPath}
-                                    filename={activeExercise.filename} 
-                                    alt={activeExercise.name} 
-                                    className="w-full h-full"
-                                />
-                            </div>
-
-                            <h2 className="text-2xl font-bold text-white mb-1">{activeExercise.name}</h2>
-                            <p className="text-xs text-gray-400 mb-1">Grupo: <strong className="text-blue-400">{activeExercise.muscle}</strong></p>
-                            <p className="text-sm text-gray-300 mb-4">Meta: <strong className="text-yellow-400">{activeExercise.value}</strong></p>
-
-                            <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 inline-block w-full max-w-xs mb-4">
-                                <span className="text-xs text-gray-400 block mb-1">Tiempo del paso actual:</span>
-                                <span className="text-4xl font-mono font-bold text-green-400">{stepTimer}s</span>
-                            </div>
-
-                            <div>
-                                <button 
-                                    onClick={stopWorkout}
-                                    className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-bold transition">
-                                    Detener Entrenamiento
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        /* VISTA PREVIA DE LA RUTINA DEL DÍA */
-                        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                            <div className="flex justify-between items-center mb-6">
-                                <div>
-                                    <h3 className="text-lg font-bold">Secuencia Mezclada del Día</h3>
-                                    <span className="text-xs text-gray-400">Incluye: Rondas Estándar, Serie Única y MiniSets Express</span>
-                                </div>
-                                {DAYS_MAP[selectedDayIndex] && (
-                                    <button 
-                                        onClick={startWorkout}
-                                        className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg">
-                                        ▶️ Iniciar Entrenamiento
-                                    </button>
-                                )}
-                            </div>
-
-                            {DAYS_MAP[selectedDayIndex] ? (
-                                <div className="space-y-3">
-                                    {currentWorkout.map((ex, idx) => (
-                                        <div key={idx} className="bg-gray-900 p-3 rounded-lg border border-gray-800 flex justify-between items-center gap-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded bg-gray-800 p-1 flex-shrink-0 border border-gray-700 overflow-hidden">
-                                                    <ExerciseVideo 
-                                                        basePath={videoPath}
-                                                        filename={ex.filename} 
-                                                        alt={ex.name} 
-                                                        className="w-full h-full"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm">{ex.name}</h4>
-                                                    <span className="text-xs text-gray-400">{ex.muscle} • {ex.value}</span>
-                                                </div>
-                                            </div>
-                                            <span className="text-[11px] bg-gray-800 text-yellow-400 border border-gray-700 px-2 py-1 rounded font-semibold whitespace-nowrap">
-                                                {ex.mode}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-gray-400">
-                                    <p>Hoy es día de descanso activo. Puedes seleccionar otro día en el menú superior.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            );
+    <title>Temporizador</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #f59e0b;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-top: 0;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timer-display {
+            background: #090d16;
+            border-radius: 10px;
+            padding: 25px 20px;
+            margin: 20px 0;
+            border: 2px solid #334155;
+        }
+
+        .countdown-title {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .time-remaining {
+            font-size: 4.5rem;
+            font-weight: bold;
+            font-family: monospace;
+            color: #38bdf8;
+            line-height: 1;
+        }
+
+        .round-info {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .music-card {
+            background: #131d31;
+            border-left: 4px solid var(--accent-green);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .music-title {
+            color: var(--accent-green);
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .music-track-name {
+            font-size: 1.1rem;
+            color: #ffffff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-start {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .btn-pause {
+            background: var(--accent);
+            color: black;
+        }
+
+        .btn-reset {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        audio {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Fitboxing Session</h1>
+
+    <!-- Solo muestra tiempo restante (Cuenta Atrás) -->
+    <div class="timer-display">
+        <div class="countdown-title">Tiempo Restante</div>
+        <div class="time-remaining" id="countdown">15:00</div>
+        <div class="round-info" id="roundDisplay">Listo para comenzar</div>
+    </div>
+
+    <!-- Pista asignada aleatoriamente -->
+    <div class="music-card">
+        <div class="music-title">🎵 Pista Asignada Aleatoriamente:</div>
+        <div class="music-track-name" id="currentTrackDisplay">En espera...</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-start" onclick="startTimer()">Iniciar</button>
+        <button class="btn-pause" onclick="pauseTimer()">Pausar</button>
+        <button class="btn-reset" onclick="resetTimer()">Reiniciar</button>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+</div>
+
+<script>
+    // Tu lista de canciones guardadas
+    const playlist = [
+        { name: "Canción 1 (Electro House - 135 BPM)", src: "cancion1.mp3" },
+        { name: "Canción 2 (Synthwave - 140 BPM)", src: "cancion2.mp3" },
+        { name: "Canción 3 (Drum & Bass - 145 BPM)", src: "cancion3.mp3" },
+        { name: "Canción 4 (Trap Motivacional - 130 BPM)", src: "cancion4.mp3" },
+        { name: "Canción 5 (High Energy EDM - 150 BPM)", src: "cancion5.mp3" }
+    ];
+
+    const totalDurationSeconds = 15 * 60; // Duración total (ej. 15 min)
+    let remainingTime = totalDurationSeconds;
+    let timerInterval = null;
+    let isRunning = false;
+
+    const countdownEl = document.getElementById('countdown');
+    const roundDisplayEl = document.getElementById('roundDisplay');
+    const trackDisplayEl = document.getElementById('currentTrackDisplay');
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    // Selección aleatoria de música
+    function getRandomTrack() {
+        const randomIndex = Math.floor(Math.random() * playlist.length);
+        return playlist[randomIndex];
+    }
+
+    function playRandomMusic() {
+        const track = getRandomTrack();
+        trackDisplayEl.textContent = track.name;
+        
+        if (track.src) {
+            audioPlayer.src = track.src;
+            audioPlayer.play().catch(e => console.log("Reproducción automática pendiente de interacción."));
+        }
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+        countdownEl.textContent = formatTime(remainingTime);
+    }
+
+    function startTimer() {
+        if (isRunning) return;
+        isRunning = true;
+
+        if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
+            playRandomMusic();
+        }
+
+        roundDisplayEl.textContent = "¡Sesión en Curso!";
+
+        timerInterval = setInterval(() => {
+            if (remainingTime > 0) {
+                remainingTime--;
+                updateDisplay();
+            } else {
+                clearInterval(timerInterval);
+                isRunning = false;
+                roundDisplayEl.textContent = "¡Entrenamiento Finalizado!";
+                audioPlayer.pause();
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        roundDisplayEl.textContent = "Sesión Pausada";
+        audioPlayer.pause();
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        remainingTime = totalDurationSeconds;
+        updateDisplay();
+        roundDisplayEl.textContent = "Listo para comenzar";
+        trackDisplayEl.textContent = "En espera...";
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+    }
+
+    updateDisplay();
+</script>
+
 </body>
 </html>
