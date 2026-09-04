@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporizador Fitboxing</title>
+    <title>Temporizador Workout</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -94,28 +94,6 @@
             color: var(--text-main);
         }
 
-        .music-card {
-            background: #131d31;
-            border-left: 4px solid var(--accent-green);
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .music-title {
-            color: var(--accent-green);
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .music-track-name {
-            font-size: 1.1rem;
-            color: #ffffff;
-            word-break: break-all;
-        }
-
         .controls {
             display: flex;
             gap: 10px;
@@ -146,7 +124,7 @@
 <body>
 
 <div class="container">
-    <h1>Fitboxing Workout Session</h1>
+    <h1>WORKOUT SESSION</h1>
 
     <div class="video-container">
         <video id="videoPlayer" muted playsinline></video>
@@ -156,11 +134,6 @@
         <div class="countdown-title">Tiempo Restante de la Sesión</div>
         <div class="time-remaining" id="countdown">15:00</div>
         <div class="round-info" id="roundDisplay">Listo para comenzar</div>
-    </div>
-
-    <div class="music-card">
-        <div class="music-title">🎵 Pista Aleatoria en Reproducción:</div>
-        <div class="music-track-name" id="currentTrackDisplay">En espera...</div>
     </div>
 
     <div class="controls">
@@ -203,20 +176,26 @@
 
     const countdownEl = document.getElementById('countdown');
     const roundDisplayEl = document.getElementById('roundDisplay');
-    const trackDisplayEl = document.getElementById('currentTrackDisplay');
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
 
-    // Cargar y reproducir el vídeo actual
+    // Cargar y reproducir el vídeo actual asegurando la re-inicialización del elemento
     function cargarVideoActual() {
         if (listaVideos.length === 0) return;
         
         const videoName = listaVideos[currentVideoIndex];
         videoPlayer.src = `videos/${videoName}`;
-        videoPlayer.play().catch(e => console.log("Cargando vídeo..."));
+        videoPlayer.load();
+        
+        if (isRunning) {
+            const playPromise = videoPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("Cargando vídeo..."));
+            }
+        }
     }
 
-    // Reinicia el vídeo actual si dura menos de lo que le corresponde (ej. 7 segundos)
+    // Reinicia el vídeo actual si dura menos de lo que le corresponde
     videoPlayer.onended = () => {
         if (isRunning) {
             videoPlayer.currentTime = 0;
@@ -239,8 +218,6 @@
         const archivoSeleccionado = libreriaMusica[indexAleatorio];
         
         audioPlayer.src = `musica/${archivoSeleccionado}`;
-        trackDisplayEl.textContent = archivoSeleccionado;
-
         audioPlayer.play().catch(e => console.log("Aviso: Comprueba la ruta en la carpeta /musica/"));
     }
 
@@ -261,7 +238,7 @@
         if (!videoPlayer.src) {
             cargarVideoActual();
         } else {
-            videoPlayer.play();
+            videoPlayer.play().catch(e => console.log("Error al iniciar vídeo"));
         }
 
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
@@ -307,7 +284,6 @@
         videoTimeCounter = 0;
         updateDisplay();
         roundDisplayEl.textContent = "Listo para comenzar";
-        trackDisplayEl.textContent = "En espera...";
         
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
