@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Session - App Dinámica</title>
+    <title>Workout Session con Música - App Dinámica</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -13,32 +13,23 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // BASE DE DATOS DE EJERCICIOS CON SU FORMATO MP4_01
+        // BASE DE DATOS DE EJERCICIOS
         const EXERCISES_DATABASE = [
-            // PECHO
             { id: 1, name: "Floor Press en Suelo", muscle: "Pecho", filename: "manc_pecho_01.mp4" },
             { id: 2, name: "Aperturas en Suelo", muscle: "Pecho", filename: "manc_pecho_02.mp4" },
             { id: 3, name: "Flexiones / Push-ups", muscle: "Pecho", filename: "body_pecho_01.mp4" },
-
-            // ESPALDA
             { id: 4, name: "Remo a Un Brazo (7.5kg)", muscle: "Espalda", filename: "manc_espalda_01.mp4" },
             { id: 5, name: "Remo Inclinado", muscle: "Espalda", filename: "manc_espalda_02.mp4" },
-
-            // HOMBROS
             { id: 6, name: "Press Militar de Pie", muscle: "Hombro", filename: "manc_hombro_01.mp4" },
             { id: 7, name: "Elevaciones Laterales", muscle: "Hombro", filename: "manc_hombro_02.mp4" },
-
-            // PIERNAS
             { id: 8, name: "Sentadilla Goblet", muscle: "Pierna", filename: "manc_pierna_01.mp4" },
             { id: 9, name: "Zancadas / Lunges", muscle: "Pierna", filename: "manc_pierna_02.mp4" },
-
-            // BRAZOS
             { id: 10, name: "Curl de Bíceps", muscle: "Brazos", filename: "manc_biceps_01.mp4" },
             { id: 11, name: "Curl Martillo", muscle: "Brazos", filename: "manc_biceps_02.mp4" },
             { id: 12, name: "Copa de Tríceps a 2 Manos", muscle: "Brazos", filename: "manc_triceps_01.mp4" }
         ];
 
-        // CONFIGURACIÓN DE DÍAS Y COMBINACIÓN DE GRUPOS MUSCULARES
+        // CONFIGURACIÓN DE DÍAS Y MÚSICA PREDETERMINADA
         const DAYS_MAP = {
             1: { name: "Lunes", title: "Empuje + Hombro Mixto", primaryMuscles: ["Pecho", "Hombro", "Brazos"] },
             3: { name: "Miércoles", title: "Tracción + Pierna Híbrida", primaryMuscles: ["Espalda", "Pierna", "Brazos"] },
@@ -46,7 +37,14 @@
             6: { name: "Sábado", title: "Burnout Express", primaryMuscles: ["Hombro", "Brazos", "Pierna"] }
         };
 
-        // COMPONENTE PARA RENDERIZAR VIDEO MP4
+        // LISTA DE PISTAS MP3 EN LA CARPETA MÚSICA
+        const MUSIC_PLAYLIST = [
+            { id: 1, title: "Motivación Energética", filename: "musica/track_01.mp3" },
+            { id: 2, title: "Ritmo de Fuerza", filename: "musica/track_02.mp3" },
+            { id: 3, title: "Cardio Beats", filename: "musica/track_03.mp3" }
+        ];
+
+        // COMPONENTE DE VIDEO
         const ExerciseVideo = ({ filename, className }) => {
             const [hasError, setHasError] = React.useState(false);
             const fullSrc = `videos/${filename}`;
@@ -60,7 +58,6 @@
                     <div className={`${className} bg-gray-800 border border-gray-700 flex flex-col items-center justify-center p-2 text-center rounded-lg`}>
                         <span className="text-xl mb-1">🎬</span>
                         <span className="text-[10px] text-gray-400 font-semibold leading-tight">No encontrado</span>
-                        <span className="text-[9px] text-yellow-500 font-mono break-all">{fullSrc}</span>
                     </div>
                 );
             }
@@ -90,7 +87,13 @@
             const [stepTimer, setStepTimer] = React.useState(0);
             const [totalSessionTime, setTotalSessionTime] = React.useState(0);
 
-            // GENERADOR DE RUTINA EXACTAMENTE DE 15 MINUTOS (900 SEGUNDOS)
+            // ESTADOS DE REPRODUCTOR DE MÚSICA
+            const [currentTrackIndex, setCurrentTrackIndex] = React.useState(0);
+            const [isPlayingMusic, setIsPlayingMusic] = React.useState(false);
+            const [musicVolume, setMusicVolume] = React.useState(0.7);
+            const audioRef = React.useRef(null);
+
+            // Generador de rutina exacta de 15 minutos (900s)
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -101,82 +104,14 @@
 
                 const pool = EXERCISES_DATABASE.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
                 const shuffled = [...pool].sort(() => 0.5 - Math.random());
-
                 if (shuffled.length < 4) return;
 
-                const sequence = [];
-
-                // 1. BLOQUE ESTÁNDAR (2 Ejercicios - 3 Rondas) -> 40s de trabajo por ronda/ejercicio
                 const stdEx1 = shuffled[0];
                 const stdEx2 = shuffled[1];
-                for (let round = 1; round <= 3; round++) {
-                    sequence.push({
-                        ...stdEx1,
-                        mode: "Estándar (3 Rondas)",
-                        duration: 40,
-                        value: "12-15 reps",
-                        isRest: false
-                    });
-                    sequence.push({
-                        ...stdEx2,
-                        mode: "Estándar (3 Rondas)",
-                        duration: 40,
-                        value: "12-15 reps",
-                        isRest: false
-                    });
-                } // Subtotal: 6 rondas * 40s = 240 segundos (4 min)
-
-                // 2. BLOQUE SERIE ÚNICA INTENSA + DESCANSO DE 30s
                 const singleEx = shuffled[2];
-                sequence.push({
-                    ...singleEx,
-                    mode: "Serie Única Máxima",
-                    duration: 50,
-                    value: "Fallo Controlado",
-                    isRest: false
-                });
-                sequence.push({
-                    name: "Descanso Recuperador",
-                    muscle: "Pausa",
-                    filename: "",
-                    mode: "Descanso",
-                    duration: 30,
-                    value: "Respirar profundo",
-                    isRest: true
-                }); // Subtotal: 80s
-
-                // 3. BLOQUE MINISET EXPRESS (4 ejercicios x 3 rondas intensas) con descansos de 30s
                 const miniSetGroup = shuffled.slice(0, 4);
-                for (let miniRound = 1; miniRound <= 3; miniRound++) {
-                    miniSetGroup.forEach((ex, idx) => {
-                        sequence.push({
-                            ...ex,
-                            mode: `MiniSet (Ronda ${miniRound}/3)`,
-                            duration: 35,
-                            value: "Ritmo Constante",
-                            isRest: false
-                        });
-                    });
-                    // Añadir descanso de 30s tras cada ronda completa del miniset (excepto al final total si cuadra, o mantenemos los 30s de respiro)
-                    sequence.push({
-                        name: "Descanso Intermedio",
-                        muscle: "Pausa",
-                        filename: "",
-                        mode: "Descanso",
-                        duration: 30,
-                        value: "Hidratación",
-                        isRest: true
-                    });
-                } // 12 ejercicios de 35s (420s) + 3 descansos de 30s (90s) = 510s (8.5 min)
 
-                // Ajuste fino para clavar los 900 segundos exactos (15 min)
-                // Si la suma actual difiere, ajustamos el último ejercicio estándar o el bloque. 
-                // Comprobación de suma: 240 + 50 + 30 + 510 = 830s. Faltan 70s que distribuimos limpiamente:
-                // Añadimos un bloque extra de recuperación o ajustamos duraciones de manera exacta.
-                
-                // Rediseñemos la secuencia sumando exactamente 900s:
                 const exactSequence = [
-                    // --- Bloque 1: Estándar (4 min / 240s) ---
                     { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
                     { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
                     { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
@@ -184,22 +119,17 @@
                     { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
                     { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
                     
-                    // Descanso agotador 1 (30s)
                     { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Recupera aire", isRest: true },
 
-                    // --- Bloque 2: Serie Única (1 min / 60s) ---
                     { ...singleEx, mode: "Serie Única Máxima", duration: 60, value: "Fallo muscular", isRest: false },
                     
-                    // Descanso agotador 2 (30s)
                     { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Baja pulsaciones", isRest: true },
 
-                    // --- Bloque 3: MiniSets Dinámicos (7 min 30s / 450s) ---
                     { ...miniSetGroup[0], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
                     { ...miniSetGroup[1], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
                     { ...miniSetGroup[2], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
                     { ...miniSetGroup[3], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
                     
-                    // Descanso agotador 3 (30s)
                     { name: "Descanso Intermedio", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Respiración profunda", isRest: true },
 
                     { ...miniSetGroup[0], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
@@ -207,13 +137,10 @@
                     { ...miniSetGroup[2], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
                     { ...miniSetGroup[3], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
 
-                    // Descanso final antes del cierre (30s)
                     { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Último respiro", isRest: true },
 
-                    // --- Bloque 4: Burnout Final (1 min / 60s) ---
                     { ...shuffled[3], mode: "Burnout Final", duration: 60, value: "¡Todo lo que te queda!", isRest: false }
                 ];
-                // Suma total exacta: 240 + 30 + 60 + 30 + 180 + 30 + 180 + 30 + 60 = 900 segundos clavados (15 minutos).
 
                 setCurrentWorkout(exactSequence);
                 const totalSecs = exactSequence.reduce((acc, curr) => acc + curr.duration, 0);
@@ -224,7 +151,19 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Temporizador general de ejecución
+            // Control de volumen y reproducción de audio HTML5
+            React.useEffect(() => {
+                if (audioRef.current) {
+                    audioRef.current.volume = musicVolume;
+                    if (isPlayingMusic) {
+                        audioRef.current.play().catch(e => console.log("Audio play prevented:", e));
+                    } else {
+                        audioRef.current.pause();
+                    }
+                }
+            }, [isPlayingMusic, currentTrackIndex, musicVolume]);
+
+            // Temporizador de sesión
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && stepTimer > 0) {
@@ -239,6 +178,7 @@
                         setStepTimer(currentWorkout[nextIndex].duration);
                     } else {
                         setIsWorkoutActive(false);
+                        setIsPlayingMusic(false);
                         alert("¡WORKOUT SESSION Completada con éxito!");
                     }
                 }
@@ -250,10 +190,12 @@
                 setCurrentStepIndex(0);
                 setStepTimer(currentWorkout[0].duration);
                 setIsWorkoutActive(true);
+                setIsPlayingMusic(true); // Arranca la música automáticamente al empezar
             };
 
             const stopWorkout = () => {
                 setIsWorkoutActive(false);
+                setIsPlayingMusic(false);
                 generateWorkoutForDay(selectedDayIndex);
             };
 
@@ -267,7 +209,18 @@
             const currentDayName = DAYS_MAP[selectedDayIndex]?.name || "Día de Descanso";
 
             return (
-                <div className="max-w-3xl mx-auto p-4">
+                <div className="max-w-3xl mx-auto p-4 pb-24">
+                    {/* ELEMENTO DE AUDIO OCULTO PARA LAS PISTAS MP3 */}
+                    <audio 
+                        ref={audioRef} 
+                        src={MUSIC_PLAYLIST[currentTrackIndex].filename} 
+                        loop 
+                        onEnded={() => {
+                            // Pasa a la siguiente pista automáticamente al terminar el mp3
+                            setCurrentTrackIndex((prev) => (prev + 1) % MUSIC_PLAYLIST.length);
+                        }}
+                    />
+
                     {/* CARTEL DE CABECERA: WORKOUT SESSION */}
                     <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 rounded-2xl shadow-xl mb-6 text-center border border-blue-400/30">
                         <span className="text-xs uppercase tracking-widest text-blue-200 font-bold">Programa Oficial de Rendimiento</span>
@@ -326,10 +279,7 @@
 
                             {!activeExercise.isRest ? (
                                 <div className="w-64 h-64 mx-auto rounded-2xl bg-gray-900 p-2 mb-4 border border-gray-700 flex items-center justify-center shadow-inner overflow-hidden">
-                                    <ExerciseVideo 
-                                        filename={activeExercise.filename} 
-                                        className="w-full h-full"
-                                    />
+                                    <ExerciseVideo filename={activeExercise.filename} className="w-full h-full" />
                                 </div>
                             ) : (
                                 <div className="w-64 h-64 mx-auto rounded-2xl bg-blue-900/20 p-2 mb-4 border border-blue-500/50 flex flex-col items-center justify-center shadow-inner">
@@ -380,10 +330,7 @@
                                             <div className="flex items-center gap-3">
                                                 {!ex.isRest ? (
                                                     <div className="w-12 h-12 rounded bg-gray-800 p-1 flex-shrink-0 border border-gray-700 overflow-hidden">
-                                                        <ExerciseVideo 
-                                                            filename={ex.filename} 
-                                                            className="w-full h-full"
-                                                        />
+                                                        <ExerciseVideo filename={ex.filename} className="w-full h-full" />
                                                     </div>
                                                 ) : (
                                                     <div className="w-12 h-12 rounded bg-blue-900/30 p-1 flex-shrink-0 border border-blue-700/50 flex items-center justify-center text-blue-300 font-bold text-xs">
@@ -408,6 +355,50 @@
                             )}
                         </div>
                     )}
+
+                    {/* BARRA FLOTANTE DE REPRODUCTOR DE MÚSICA (MP3) */}
+                    <div className="fixed bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800 p-3 shadow-2xl z-50">
+                        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <span className="text-2xl animate-pulse">🎵</span>
+                                <div className="overflow-hidden">
+                                    <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">Música de Entrenamiento</span>
+                                    <select 
+                                        value={currentTrackIndex}
+                                        onChange={(e) => {
+                                            setCurrentTrackIndex(Number(e.target.value));
+                                            setIsPlayingMusic(true);
+                                        }}
+                                        className="bg-gray-900 text-white text-xs font-semibold rounded border border-gray-700 px-2 py-1 max-w-[200px] truncate focus:outline-none focus:border-purple-500">
+                                        {MUSIC_PLAYLIST.map((track, i) => (
+                                            <option key={i} value={i}>{track.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <button 
+                                    onClick={() => setIsPlayingMusic(!isPlayingMusic)}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${isPlayingMusic ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white'}`}>
+                                    {isPlayingMusic ? '⏸️ Pausar Música' : '▶️ Reproducir Música'}
+                                </button>
+
+                                <div className="hidden sm:flex items-center gap-2">
+                                    <span className="text-xs text-gray-400">🔊</span>
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="1" 
+                                        step="0.05"
+                                        value={musicVolume}
+                                        onChange={(e) => setMusicVolume(Number(e.target.value))}
+                                        className="w-20 accent-purple-500 cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         }
