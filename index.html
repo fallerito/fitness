@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporizador</title>
+    <title>Temporizador Fitboxing</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -30,7 +30,7 @@
 
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 650px;
             background: var(--card-bg);
             border-radius: 12px;
             padding: 25px;
@@ -46,11 +46,29 @@
             letter-spacing: 1px;
         }
 
+        /* Contenedor del reproductor de vídeo sin texto descriptivo de la ruta */
+        .video-container {
+            width: 100%;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #334155;
+            aspect-ratio: 16 / 9;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
         .timer-display {
             background: #090d16;
             border-radius: 10px;
-            padding: 25px 20px;
-            margin: 20px 0;
+            padding: 20px;
+            margin-bottom: 20px;
             border: 2px solid #334155;
         }
 
@@ -59,7 +77,7 @@
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .time-remaining {
@@ -82,7 +100,7 @@
             border-left: 4px solid var(--accent-green);
             border-radius: 6px;
             padding: 15px;
-            margin: 20px 0;
+            margin-bottom: 20px;
             text-align: left;
         }
 
@@ -103,7 +121,6 @@
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-top: 20px;
         }
 
         button {
@@ -130,16 +147,26 @@
 <body>
 
 <div class="container">
-    <h1>Fitboxing Timer</h1>
+    <h1>Fitboxing Workout Session</h1>
 
+    <!-- Vídeo (reproduce sin mostrar ruta) -->
+    <div class="video-container">
+        <video id="videoPlayer" muted loop playsinline>
+            <source src="videos/video_sesion.mp4" type="video/mp4">
+            Tu navegador no soporta la reproducción de vídeo.
+        </video>
+    </div>
+
+    <!-- Cuenta atrás (solo tiempo restante) -->
     <div class="timer-display">
-        <div class="countdown-title">Tiempo Restante</div>
+        <div class="countdown-title">Tiempo Restante de la Sesión</div>
         <div class="time-remaining" id="countdown">15:00</div>
         <div class="round-info" id="roundDisplay">Listo para comenzar</div>
     </div>
 
+    <!-- Canción aleatoria de la carpeta /musica/ -->
     <div class="music-card">
-        <div class="music-title">🎵 Pista Aleatoria de la Carpeta:</div>
+        <div class="music-title">🎵 Pista Aleatoria en Reproducción:</div>
         <div class="music-track-name" id="currentTrackDisplay">En espera...</div>
     </div>
 
@@ -153,8 +180,7 @@
 </div>
 
 <script>
-    // LISTA DE ARCHIVOS DENTRO DE TU CARPETA /musica/
-    // Pon aquí los nombres exactos de tus archivos MP3:
+    // Archivos dentro de la carpeta /musica/
     const libreriaMusica = [
         "pista1.mp3",
         "pista2.mp3",
@@ -172,21 +198,18 @@
     const roundDisplayEl = document.getElementById('roundDisplay');
     const trackDisplayEl = document.getElementById('currentTrackDisplay');
     const audioPlayer = document.getElementById('audioPlayer');
+    const videoPlayer = document.getElementById('videoPlayer');
 
-    // Cargar y reproducir archivo aleatorio desde /musica/
     function reproducirMusicaAleatoria() {
         if (libreriaMusica.length === 0) return;
 
         const indexAleatorio = Math.floor(Math.random() * libreriaMusica.length);
         const archivoSeleccionado = libreriaMusica[indexAleatorio];
         
-        // Asignar ruta de la carpeta /musica/
         audioPlayer.src = `musica/${archivoSeleccionado}`;
         trackDisplayEl.textContent = archivoSeleccionado;
 
-        audioPlayer.play().catch(e => {
-            console.log("Aviso: Comprueba que los archivos existen dentro de la carpeta /musica/");
-        });
+        audioPlayer.play().catch(e => console.log("Aviso: Comprueba la ruta en la carpeta /musica/"));
     }
 
     function formatTime(seconds) {
@@ -203,6 +226,9 @@
         if (isRunning) return;
         isRunning = true;
 
+        // Reproducir el vídeo al iniciar
+        videoPlayer.play();
+
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
             reproducirMusicaAleatoria();
         }
@@ -218,6 +244,7 @@
                 isRunning = false;
                 roundDisplayEl.textContent = "¡Entrenamiento Finalizado!";
                 audioPlayer.pause();
+                videoPlayer.pause();
             }
         }, 1000);
     }
@@ -227,6 +254,7 @@
         isRunning = false;
         roundDisplayEl.textContent = "Sesión Pausada";
         audioPlayer.pause();
+        videoPlayer.pause();
     }
 
     function resetTimer() {
@@ -236,8 +264,12 @@
         updateDisplay();
         roundDisplayEl.textContent = "Listo para comenzar";
         trackDisplayEl.textContent = "En espera...";
+        
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
+
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0;
     }
 
     updateDisplay();
