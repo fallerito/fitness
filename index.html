@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporizador</title>
+    <title>Temporizador Fitboxing</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -46,7 +46,6 @@
             letter-spacing: 1px;
         }
 
-        /* Reproductor de vídeo sin texto explicativo de la ruta */
         .video-container {
             width: 100%;
             background: #000;
@@ -149,19 +148,17 @@
 <div class="container">
     <h1>Fitboxing Workout Session</h1>
 
-    <!-- Reproductor de vídeo visible sin ruta expuesta -->
     <div class="video-container">
-        <video id="videoPlayer" muted playsinline></video>
+        <!-- El atributo loop asegura que se repita continuamente -->
+        <video id="videoPlayer" muted loop playsinline></video>
     </div>
 
-    <!-- Cuenta atrás (solo tiempo restante) -->
     <div class="timer-display">
         <div class="countdown-title">Tiempo Restante de la Sesión</div>
         <div class="time-remaining" id="countdown">15:00</div>
         <div class="round-info" id="roundDisplay">Listo para comenzar</div>
     </div>
 
-    <!-- Pista musical en reproducción -->
     <div class="music-card">
         <div class="music-title">🎵 Pista Aleatoria en Reproducción:</div>
         <div class="music-track-name" id="currentTrackDisplay">En espera...</div>
@@ -177,7 +174,7 @@
 </div>
 
 <script>
-    // 1. LISTA DE VÍDEOS EN CARPETA /videos/
+    // 1. LISTA DE VÍDEOS DE EJERCICIOS
     const listaVideos = [
         "body_pecho_01.mp4",
         "body_espalda_01.mp4",
@@ -186,7 +183,7 @@
         "body_abs_01.mp4"
     ];
 
-    // 2. LISTA DE MÚSICA EN CARPETA /musica/
+    // 2. MÚSICA EN CARPETA /musica/
     const libreriaMusica = [
         "pista1.mp3",
         "pista2.mp3",
@@ -207,24 +204,14 @@
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
 
-    // Cargar y reproducir el siguiente vídeo de la secuencia
-    function cargarSiguienteVideo() {
+    function cargarVideoActual() {
         if (listaVideos.length === 0) return;
         
         const videoName = listaVideos[currentVideoIndex];
         videoPlayer.src = `videos/${videoName}`;
-        videoPlayer.play().catch(e => console.log("Carga de vídeo en progreso..."));
-
-        // Avanzar al siguiente vídeo de la lista en bucle
-        currentVideoIndex = (currentVideoIndex + 1) % listaVideos.length;
+        videoPlayer.loop = true; // Bucle activado por código
+        videoPlayer.play().catch(e => console.log("Cargando vídeo..."));
     }
-
-    // Al finalizar un vídeo, pasa automáticamente al siguiente
-    videoPlayer.onended = () => {
-        if (isRunning) {
-            cargarSiguienteVideo();
-        }
-    };
 
     function reproducirMusicaAleatoria() {
         if (libreriaMusica.length === 0) return;
@@ -252,12 +239,10 @@
         if (isRunning) return;
         isRunning = true;
 
-        if (!videoPlayer.src || videoPlayer.paused) {
-            if (!videoPlayer.src) {
-                cargarSiguienteVideo();
-            } else {
-                videoPlayer.play();
-            }
+        if (!videoPlayer.src) {
+            cargarVideoActual();
+        } else {
+            videoPlayer.play();
         }
 
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
