@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporizador Workout</title>
+    <title>Temporizador Workout Inteligente</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -124,7 +124,7 @@
 <body>
 
 <div class="container">
-    <h1>WORKOUT SESSION</h1>
+    <h1 id="dayTitle">WORKOUT SESSION</h1>
 
     <div class="video-container">
         <video id="videoPlayer" muted playsinline></video>
@@ -146,12 +146,15 @@
 </div>
 
 <script>
-    const listaVideos = [
+    // Catálogo total de vídeos disponibles
+    const catalogoVideos = [
         "body_pecho_01.mp4",
         "body_espalda_01.mp4",
         "body_piernas_01.mp4",
         "body_hombros_01.mp4",
-        "body_abs_01.mp4"
+        "body_abs_01.mp4",
+        "body_brazos_01.mp4",
+        "body_cardio_01.mp4"
     ];
 
     const libreriaMusica = [
@@ -163,8 +166,10 @@
     ];
 
     const tiempoPorEjercicioSegundos = 25; 
-    const totalDurationSeconds = 15 * 60;   
-    
+    const totalDurationSeconds = 15 * 60; // 15 minutos en total (36 ejercicios de 25s)
+    const totalEjerciciosSesion = totalDurationSeconds / tiempoPorEjercicioSegundos;
+
+    let listaRutinaHoy = [];
     let remainingTime = totalDurationSeconds;
     let timerInterval = null;
     let isRunning = false;
@@ -173,14 +178,38 @@
 
     const countdownEl = document.getElementById('countdown');
     const roundDisplayEl = document.getElementById('roundDisplay');
+    const dayTitleEl = document.getElementById('dayTitle');
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
 
-    // Lógica limpia original que funcionaba perfectamente antes de la música
-    function cargarVideoActual() {
-        if (listaVideos.length === 0) return;
+    // Generar rutina variada según el día de la semana para evitar repeticiones
+    function generarRutinaDelDia() {
+        const d = new Date();
+        const diaSemana = d.getDay(); // 0: Domingo, 1: Lunes, etc.
+        const nombresDias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         
-        const videoName = listaVideos[currentVideoIndex];
+        dayTitleEl.textContent = `Rutina del ${nombresDias[diaSemana]}`;
+
+        // Usamos el día como semilla para mezclar el catálogo de forma única cada día
+        let mezclados = [...catalogoVideos];
+        mezclados.sort((a, b) => {
+            let hashA = (a.charCodeAt(0) * diaSemana) % 7;
+            let hashB = (b.charCodeAt(0) * diaSemana) % 7;
+            return hashA - hashB;
+        });
+
+        // Rellenar los bloques necesarios para cubrir los 15 minutos (36 bloques de 25s)
+        let rutina = [];
+        for (let i = 0; i < totalEjerciciosSesion; i++) {
+            rutina.push(mezclados[i % mezclados.length]);
+        }
+        return rutina;
+    }
+
+    function cargarVideoActual() {
+        if (listaRutinaHoy.length === 0) return;
+        
+        const videoName = listaRutinaHoy[currentVideoIndex];
         videoPlayer.src = `videos/${videoName}`;
         videoPlayer.load();
         
@@ -189,7 +218,6 @@
         }
     }
 
-    // Bucle nativo fluido para los vídeos de pocos segundos
     videoPlayer.onended = () => {
         if (isRunning) {
             videoPlayer.currentTime = 0;
@@ -198,8 +226,8 @@
     };
 
     function cambiarSiguienteEjercicio() {
-        if (listaVideos.length === 0) return;
-        currentVideoIndex = (currentVideoIndex + 1) % listaVideos.length;
+        if (listaRutinaHoy.length === 0) return;
+        currentVideoIndex = (currentVideoIndex + 1) % listaRutinaHoy.length;
         videoTimeCounter = 0;
         cargarVideoActual();
     }
@@ -224,6 +252,10 @@
     function startTimer() {
         if (isRunning) return;
         isRunning = true;
+
+        if (listaRutinaHoy.length === 0) {
+            listaRutinaHoy = generarRutinaDelDia();
+        }
 
         if (!videoPlayer.src || videoPlayer.src === "") {
             cargarVideoActual();
@@ -271,6 +303,7 @@
         remainingTime = totalDurationSeconds;
         currentVideoIndex = 0;
         videoTimeCounter = 0;
+        listaRutinaHoy = generarRutinaDelDia(); // Regenera mezcla para el reinicio
         updateDisplay();
         roundDisplayEl.textContent = "Listo para comenzar";
         
@@ -282,6 +315,8 @@
         videoPlayer.load();
     }
 
+    // Inicializar título y lista al cargar la página
+    listaRutinaHoy = generarRutinaDelDia();
     updateDisplay();
 </script>
 
