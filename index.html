@@ -165,8 +165,8 @@
     ];
 
     // Parámetros de tiempo
-    const tiempoPorEjercicioSegundos = 30; // Tiempo en segundos antes de pasar al siguiente vídeo
-    const totalDurationSeconds = 15 * 60;   // 15 minutos totales de sesión
+    const tiempoPorEjercicioSegundos = 25; // Cada ejercicio dura 25 segundos
+    const totalDurationSeconds = 15 * 60;   // 15 minutos totales
     
     let remainingTime = totalDurationSeconds;
     let timerInterval = null;
@@ -179,31 +179,32 @@
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
 
-    // Cargar y reproducir el vídeo actual asegurando la re-inicialización del elemento
+    // Cargar y asegurar la reproducción del vídeo actual
     function cargarVideoActual() {
         if (listaVideos.length === 0) return;
         
         const videoName = listaVideos[currentVideoIndex];
+        videoPlayer.pause();
         videoPlayer.src = `videos/${videoName}`;
         videoPlayer.load();
-        
-        if (isRunning) {
-            const playPromise = videoPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => console.log("Cargando vídeo..."));
+
+        // Reproducir únicamente cuando el navegador haya cargado los datos del vídeo
+        videoPlayer.onloadeddata = () => {
+            if (isRunning) {
+                videoPlayer.play().catch(e => console.log("Error al reproducir vídeo:", e));
             }
-        }
+        };
     }
 
-    // Reinicia el vídeo actual si dura menos de lo que le corresponde
+    // Reinicia el vídeo actual si es más corto que la duración del ejercicio (bucle)
     videoPlayer.onended = () => {
         if (isRunning) {
             videoPlayer.currentTime = 0;
-            videoPlayer.play().catch(e => console.log("Error al repetir vídeo"));
+            videoPlayer.play().catch(e => console.log("Error en bucle de vídeo:", e));
         }
     };
 
-    // Pasa al siguiente ejercicio de la lista
+    // Pasa al siguiente ejercicio de la lista al cumplir los 25 segundos
     function cambiarSiguienteEjercicio() {
         if (listaVideos.length === 0) return;
         currentVideoIndex = (currentVideoIndex + 1) % listaVideos.length;
@@ -218,7 +219,7 @@
         const archivoSeleccionado = libreriaMusica[indexAleatorio];
         
         audioPlayer.src = `musica/${archivoSeleccionado}`;
-        audioPlayer.play().catch(e => console.log("Aviso: Comprueba la ruta en la carpeta /musica/"));
+        audioPlayer.play().catch(e => console.log("Aviso de audio:", e));
     }
 
     function formatTime(seconds) {
@@ -235,10 +236,10 @@
         if (isRunning) return;
         isRunning = true;
 
-        if (!videoPlayer.src) {
+        if (!videoPlayer.src || videoPlayer.src === "") {
             cargarVideoActual();
         } else {
-            videoPlayer.play().catch(e => console.log("Error al iniciar vídeo"));
+            videoPlayer.play().catch(e => console.log("Error al reanudar vídeo:", e));
         }
 
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
@@ -252,7 +253,7 @@
                 remainingTime--;
                 videoTimeCounter++;
 
-                // Cambiar al siguiente vídeo cuando se alcancen los 30 segundos del ejercicio actual
+                // Cambiar de ejercicio cada 25 segundos
                 if (videoTimeCounter >= tiempoPorEjercicioSegundos) {
                     cambiarSiguienteEjercicio();
                 }
