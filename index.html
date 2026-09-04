@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Session con Música - App Dinámica</title>
+    <title>Workout Session Automática - App Dinámica</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -29,7 +29,7 @@
             { id: 12, name: "Copa de Tríceps a 2 Manos", muscle: "Brazos", filename: "manc_triceps_01.mp4" }
         ];
 
-        // CONFIGURACIÓN DE DÍAS Y MÚSICA PREDETERMINADA
+        // CONFIGURACIÓN DE DÍAS
         const DAYS_MAP = {
             1: { name: "Lunes", title: "Empuje + Hombro Mixto", primaryMuscles: ["Pecho", "Hombro", "Brazos"] },
             3: { name: "Miércoles", title: "Tracción + Pierna Híbrida", primaryMuscles: ["Espalda", "Pierna", "Brazos"] },
@@ -37,12 +37,15 @@
             6: { name: "Sábado", title: "Burnout Express", primaryMuscles: ["Hombro", "Brazos", "Pierna"] }
         };
 
-        // LISTA DE PISTAS MP3 EN LA CARPETA MÚSICA
-        const MUSIC_PLAYLIST = [
-            { id: 1, title: "Motivación Energética", filename: "musica/track_01.mp3" },
-            { id: 2, title: "Ritmo de Fuerza", filename: "musica/track_02.mp3" },
-            { id: 3, title: "Cardio Beats", filename: "musica/track_03.mp3" }
-        ];
+        // PISTAS MP3 ASIGNADAS A CADA BLOQUE DE LA SESIÓN
+        // track_01.mp3 -> Bloque Estándar
+        // track_02.mp3 -> Serie Única y Descansos
+        // track_03.mp3 -> MiniSets y Burnout Final
+        const MUSIC_TRACKS = {
+            block1: "musica/track_01.mp3",
+            block2: "musica/track_02.mp3",
+            block3: "musica/track_03.mp3"
+        };
 
         // COMPONENTE DE VIDEO
         const ExerciseVideo = ({ filename, className }) => {
@@ -87,13 +90,11 @@
             const [stepTimer, setStepTimer] = React.useState(0);
             const [totalSessionTime, setTotalSessionTime] = React.useState(0);
 
-            // ESTADOS DE REPRODUCTOR DE MÚSICA
-            const [currentTrackIndex, setCurrentTrackIndex] = React.useState(0);
-            const [isPlayingMusic, setIsPlayingMusic] = React.useState(false);
-            const [musicVolume, setMusicVolume] = React.useState(0.7);
+            // REFERENCIA AL AUDIO OCULTO
             const audioRef = React.useRef(null);
+            const [currentMusicSrc, setCurrentMusicSrc] = React.useState(MUSIC_TRACKS.block1);
 
-            // Generador de rutina exacta de 15 minutos (900s)
+            // Generador de rutina exacta de 15 minutos (900s) con etiquetas de bloque para la música
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -112,34 +113,31 @@
                 const miniSetGroup = shuffled.slice(0, 4);
 
                 const exactSequence = [
-                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
-                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
-                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
-                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
-                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
-                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    // BLOQUE 1 (Usa track_01.mp3)
+                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'block1' },
+                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'block1' },
+                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'block1' },
+                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'block1' },
+                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'block1' },
+                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'block1' },
                     
-                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Recupera aire", isRest: true },
+                    // BLOQUE 2 (Usa track_02.mp3)
+                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Recupera aire", isRest: true, musicBlock: 'block2' },
+                    { ...singleEx, mode: "Serie Única Máxima", duration: 60, value: "Fallo muscular", isRest: false, musicBlock: 'block2' },
+                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Baja pulsaciones", isRest: true, musicBlock: 'block2' },
 
-                    { ...singleEx, mode: "Serie Única Máxima", duration: 60, value: "Fallo muscular", isRest: false },
-                    
-                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Baja pulsaciones", isRest: true },
-
-                    { ...miniSetGroup[0], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
-                    { ...miniSetGroup[1], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
-                    { ...miniSetGroup[2], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
-                    { ...miniSetGroup[3], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
-                    
-                    { name: "Descanso Intermedio", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Respiración profunda", isRest: true },
-
-                    { ...miniSetGroup[0], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
-                    { ...miniSetGroup[1], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
-                    { ...miniSetGroup[2], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
-                    { ...miniSetGroup[3], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
-
-                    { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Último respiro", isRest: true },
-
-                    { ...shuffled[3], mode: "Burnout Final", duration: 60, value: "¡Todo lo que te queda!", isRest: false }
+                    // BLOQUE 3 (Usa track_03.mp3)
+                    { ...miniSetGroup[0], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'block3' },
+                    { ...miniSetGroup[1], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'block3' },
+                    { ...miniSetGroup[2], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'block3' },
+                    { ...miniSetGroup[3], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'block3' },
+                    { name: "Descanso Intermedio", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Respiración profunda", isRest: true, musicBlock: 'block3' },
+                    { ...miniSetGroup[0], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'block3' },
+                    { ...miniSetGroup[1], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'block3' },
+                    { ...miniSetGroup[2], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'block3' },
+                    { ...miniSetGroup[3], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'block3' },
+                    { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Último respiro", isRest: true, musicBlock: 'block3' },
+                    { ...shuffled[3], mode: "Burnout Final", duration: 60, value: "¡Todo lo que te queda!", isRest: false, musicBlock: 'block3' }
                 ];
 
                 setCurrentWorkout(exactSequence);
@@ -151,19 +149,24 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Control de volumen y reproducción de audio HTML5
+            // Gestionar cambios de pista automáticos al cambiar de paso/bloque
             React.useEffect(() => {
-                if (audioRef.current) {
-                    audioRef.current.volume = musicVolume;
-                    if (isPlayingMusic) {
-                        audioRef.current.play().catch(e => console.log("Audio play prevented:", e));
-                    } else {
-                        audioRef.current.pause();
+                if (isWorkoutActive && currentWorkout[currentStepIndex]) {
+                    const currentBlock = currentWorkout[currentStepIndex].musicBlock;
+                    const targetMusic = MUSIC_TRACKS[currentBlock];
+
+                    if (currentMusicSrc !== targetMusic) {
+                        setCurrentMusicSrc(targetMusic);
+                    }
+
+                    if (audioRef.current) {
+                        audioRef.current.volume = 0.7;
+                        audioRef.current.play().catch(e => console.log("Audio autoplay restricted:", e));
                     }
                 }
-            }, [isPlayingMusic, currentTrackIndex, musicVolume]);
+            }, [currentStepIndex, isWorkoutActive]);
 
-            // Temporizador de sesión
+            // Temporizador general de sesión
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && stepTimer > 0) {
@@ -178,7 +181,7 @@
                         setStepTimer(currentWorkout[nextIndex].duration);
                     } else {
                         setIsWorkoutActive(false);
-                        setIsPlayingMusic(false);
+                        if (audioRef.current) audioRef.current.pause();
                         alert("¡WORKOUT SESSION Completada con éxito!");
                     }
                 }
@@ -189,13 +192,24 @@
                 if (currentWorkout.length === 0) return;
                 setCurrentStepIndex(0);
                 setStepTimer(currentWorkout[0].duration);
+                setCurrentMusicSrc(MUSIC_TRACKS[currentWorkout[0].musicBlock]);
                 setIsWorkoutActive(true);
-                setIsPlayingMusic(true); // Arranca la música automáticamente al empezar
+
+                // Forzar reproducción inicial del audio
+                setTimeout(() => {
+                    if (audioRef.current) {
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.volume = 0.7;
+                        audioRef.current.play().catch(e => console.log("Audio play blocked:", e));
+                    }
+                }, 100);
             };
 
             const stopWorkout = () => {
                 setIsWorkoutActive(false);
-                setIsPlayingMusic(false);
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                }
                 generateWorkoutForDay(selectedDayIndex);
             };
 
@@ -209,17 +223,9 @@
             const currentDayName = DAYS_MAP[selectedDayIndex]?.name || "Día de Descanso";
 
             return (
-                <div className="max-w-3xl mx-auto p-4 pb-24">
-                    {/* ELEMENTO DE AUDIO OCULTO PARA LAS PISTAS MP3 */}
-                    <audio 
-                        ref={audioRef} 
-                        src={MUSIC_PLAYLIST[currentTrackIndex].filename} 
-                        loop 
-                        onEnded={() => {
-                            // Pasa a la siguiente pista automáticamente al terminar el mp3
-                            setCurrentTrackIndex((prev) => (prev + 1) % MUSIC_PLAYLIST.length);
-                        }}
-                    />
+                <div className="max-w-3xl mx-auto p-4">
+                    {/* AUDIO OCULTO AUTOMÁTICO */}
+                    <audio ref={audioRef} src={currentMusicSrc} loop />
 
                     {/* CARTEL DE CABECERA: WORKOUT SESSION */}
                     <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 rounded-2xl shadow-xl mb-6 text-center border border-blue-400/30">
@@ -227,7 +233,7 @@
                         <h1 className="text-3xl md:text-4xl font-black text-white tracking-wider mt-1 drop-shadow-md">
                             WORKOUT SESSION
                         </h1>
-                        <p className="text-xs text-indigo-100 mt-1">Duración optimizada: <strong className="text-yellow-300">15 Minutos</strong> con descansos integrados</p>
+                        <p className="text-xs text-indigo-100 mt-1">Duración optimizada: <strong className="text-yellow-300">15 Minutos</strong> con audio automático por bloques</p>
                     </div>
 
                     {/* SELECCIÓN DE DÍA */}
@@ -312,7 +318,7 @@
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                 <div>
                                     <h3 className="text-lg font-bold">Secuencia de 15 Minutos Programada</h3>
-                                    <span className="text-xs text-gray-400 block">Duración Total Exacta: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Incluye pausas de 30s)</span>
+                                    <span className="text-xs text-gray-400 block">Duración Total Exacta: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Con música automática por bloques)</span>
                                 </div>
                                 {DAYS_MAP[selectedDayIndex] && (
                                     <button 
@@ -355,50 +361,6 @@
                             )}
                         </div>
                     )}
-
-                    {/* BARRA FLOTANTE DE REPRODUCTOR DE MÚSICA (MP3) */}
-                    <div className="fixed bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800 p-3 shadow-2xl z-50">
-                        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <span className="text-2xl animate-pulse">🎵</span>
-                                <div className="overflow-hidden">
-                                    <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">Música de Entrenamiento</span>
-                                    <select 
-                                        value={currentTrackIndex}
-                                        onChange={(e) => {
-                                            setCurrentTrackIndex(Number(e.target.value));
-                                            setIsPlayingMusic(true);
-                                        }}
-                                        className="bg-gray-900 text-white text-xs font-semibold rounded border border-gray-700 px-2 py-1 max-w-[200px] truncate focus:outline-none focus:border-purple-500">
-                                        {MUSIC_PLAYLIST.map((track, i) => (
-                                            <option key={i} value={i}>{track.title}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <button 
-                                    onClick={() => setIsPlayingMusic(!isPlayingMusic)}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${isPlayingMusic ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white'}`}>
-                                    {isPlayingMusic ? '⏸️ Pausar Música' : '▶️ Reproducir Música'}
-                                </button>
-
-                                <div className="hidden sm:flex items-center gap-2">
-                                    <span className="text-xs text-gray-400">🔊</span>
-                                    <input 
-                                        type="range" 
-                                        min="0" 
-                                        max="1" 
-                                        step="0.05"
-                                        value={musicVolume}
-                                        onChange={(e) => setMusicVolume(Number(e.target.value))}
-                                        className="w-20 accent-purple-500 cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             );
         }
