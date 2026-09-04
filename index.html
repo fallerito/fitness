@@ -37,15 +37,15 @@
             6: { name: "Sábado", title: "Burnout Express", primaryMuscles: ["Hombro", "Brazos", "Pierna"] }
         };
 
-        // 7 PISTAS MP3 ASIGNADAS A LA SESIÓN
+        // GESTIÓN INTERNA DE LAS 7 PISTAS AUTOMÁTICAS
         const MUSIC_TRACKS = {
-            pista1: "musica/pista1.mp3", // Cuenta atrás inicial y primer bloque
-            pista2: "musica/pista2.mp3", // Continuación bloque estándar
-            pista3: "musica/pista3.mp3", // Descanso activo previo a serie única
-            pista4: "musica/pista4.mp3", // Serie única máxima
-            pista5: "musica/pista5.mp3", // Primeros miniset
-            pista6: "musica/pista6.mp3", // Segundos miniset
-            pista7: "musica/pista7.mp3"  // Burnout final
+            pista1: "musica/pista1.mp3",
+            pista2: "musica/pista2.mp3",
+            pista3: "musica/pista3.mp3",
+            pista4: "musica/pista4.mp3",
+            pista5: "musica/pista5.mp3",
+            pista6: "musica/pista6.mp3",
+            pista7: "musica/pista7.mp3"
         };
 
         // COMPONENTE DE VIDEO DE EJERCICIO
@@ -95,11 +95,11 @@
             const [stepTimer, setStepTimer] = React.useState(0);
             const [totalSessionTime, setTotalSessionTime] = React.useState(0);
 
-            // ESTADOS DE AUDIO
+            // ESTADOS DE AUDIO OCULTO
             const audioRef = React.useRef(null);
             const [currentMusicSrc, setCurrentMusicSrc] = React.useState(MUSIC_TRACKS.pista1);
 
-            // Generador de rutina exacta de 15 minutos distribuyendo las 7 pistas
+            // Generador de rutina exacta de 15 minutos
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -118,7 +118,6 @@
                 const miniSetGroup = shuffled.slice(0, 4);
 
                 const exactSequence = [
-                    // BLOQUE ESTÁNDAR (Pista 1 y Pista 2)
                     { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'pista1', isBlockStart: true },
                     { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'pista1', isBlockStart: false },
                     { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'pista1', isBlockStart: false },
@@ -126,26 +125,22 @@
                     { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'pista2', isBlockStart: false },
                     { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false, musicBlock: 'pista2', isBlockStart: false },
                     
-                    // DESCANSO Y SERIE ÚNICA (Pista 3 y Pista 4)
                     { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Recupera aire", isRest: true, musicBlock: 'pista3', isBlockStart: true },
                     { ...singleEx, mode: "Serie Única Máxima", duration: 60, value: "Fallo muscular", isRest: false, musicBlock: 'pista4', isBlockStart: true },
                     { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Baja pulsaciones", isRest: true, musicBlock: 'pista4', isBlockStart: false },
 
-                    // MINI-SETS RONDA 1 (Pista 5)
                     { ...miniSetGroup[0], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'pista5', isBlockStart: true },
                     { ...miniSetGroup[1], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'pista5', isBlockStart: false },
                     { ...miniSetGroup[2], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'pista5', isBlockStart: false },
                     { ...miniSetGroup[3], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false, musicBlock: 'pista5', isBlockStart: false },
                     { name: "Descanso Intermedio", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Respiración profunda", isRest: true, musicBlock: 'pista5', isBlockStart: false },
 
-                    // MINI-SETS RONDA 2 (Pista 6)
                     { ...miniSetGroup[0], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'pista6', isBlockStart: true },
                     { ...miniSetGroup[1], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'pista6', isBlockStart: false },
                     { ...miniSetGroup[2], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'pista6', isBlockStart: false },
                     { ...miniSetGroup[3], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false, musicBlock: 'pista6', isBlockStart: false },
                     { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Último respiro", isRest: true, musicBlock: 'pista6', isBlockStart: false },
 
-                    // BURNOUT FINAL (Pista 7)
                     { ...shuffled[3], mode: "Burnout Final", duration: 60, value: "¡Todo lo que te queda!", isRest: false, musicBlock: 'pista7', isBlockStart: true }
                 ];
 
@@ -159,7 +154,7 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Manejo de la cuenta regresiva de 5 segundos
+            // Cuenta regresiva de 5 segundos
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && isCountdownActive && countdownTimer > 0) {
@@ -174,7 +169,7 @@
                 return () => clearInterval(interval);
             }, [isWorkoutActive, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
 
-            // Temporizador del ejercicio activo
+            // Temporizador de ejercicios
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && !isCountdownActive && stepTimer > 0) {
@@ -190,7 +185,6 @@
                         const nextItem = currentWorkout[nextIndex];
                         const currentItem = currentWorkout[currentStepIndex];
 
-                        // Cambiar pista de música automáticamente si toca nueva pista
                         if (nextItem.musicBlock !== currentItem.musicBlock || nextItem.isBlockStart) {
                             setCurrentMusicSrc(MUSIC_TRACKS[nextItem.musicBlock]);
                             if (audioRef.current) {
@@ -258,7 +252,7 @@
 
             return (
                 <div className="max-w-3xl mx-auto p-4">
-                    {/* AUDIO OCULTO */}
+                    {/* AUDIO OCULTO SIN CONTROLES */}
                     <audio ref={audioRef} src={currentMusicSrc} loop />
 
                     {/* CABECERA */}
@@ -267,7 +261,7 @@
                         <h1 className="text-3xl md:text-4xl font-black text-white tracking-wider mt-1 drop-shadow-md">
                             WORKOUT SESSION
                         </h1>
-                        <p className="text-xs text-indigo-100 mt-1">15 Minutos guiados con cuenta atrás y 7 pistas automáticas</p>
+                        <p className="text-xs text-indigo-100 mt-1">Sesión guiada de alta intensidad de 15 minutos</p>
                     </div>
 
                     {/* SELECCIÓN DE DÍA */}
@@ -305,7 +299,7 @@
                             {isCountdownActive ? (
                                 <div className="py-10">
                                     <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                                        ⏱️ Preparando siguiente sección ({activeExercise.musicBlock}.mp3)
+                                        Preparando siguiente bloque
                                     </span>
                                     <div className="w-48 h-48 mx-auto my-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center shadow-2xl border-4 border-amber-300 animate-pulse">
                                         <span className="text-6xl font-black text-white font-mono">{countdownTimer}</span>
@@ -342,7 +336,7 @@
                                     )}
 
                                     <h2 className="text-2xl font-bold text-white mb-1">{activeExercise.name}</h2>
-                                    <p className="text-xs text-gray-400 mb-1">Bloque: <strong className="text-blue-400">{activeExercise.muscle}</strong> | Audio: <strong className="text-purple-400">{activeExercise.musicBlock}.mp3</strong></p>
+                                    <p className="text-xs text-gray-400 mb-1">Zona: <strong className="text-blue-400">{activeExercise.muscle}</strong></p>
                                     <p className="text-sm text-gray-300 mb-4">Indicación: <strong className="text-yellow-400">{activeExercise.value}</strong></p>
 
                                     <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 inline-block w-full max-w-xs mb-4">
@@ -365,8 +359,8 @@
                         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                 <div>
-                                    <h3 className="text-lg font-bold">Secuencia Programada (7 Pistas)</h3>
-                                    <span className="text-xs text-gray-400 block">Duración Estimada: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Con cuentas atrás y 7 pistas MP3 automatizadas)</span>
+                                    <h3 className="text-lg font-bold">Secuencia Programada</h3>
+                                    <span className="text-xs text-gray-400 block">Duración Estimada: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong></span>
                                 </div>
                                 {DAYS_MAP[selectedDayIndex] && (
                                     <button 
@@ -382,7 +376,7 @@
                                     <div key={idx} className={`p-3 rounded-lg border flex justify-between items-center gap-3 ${ex.isRest ? 'bg-blue-950/20 border-blue-900/50' : 'bg-gray-900 border-gray-800'}`}>
                                         <div className="flex items-center gap-3">
                                             {ex.isBlockStart && (
-                                                <span className="bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-bold whitespace-nowrap">⏱️ 5s + {ex.musicBlock}.mp3</span>
+                                                <span className="bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-bold whitespace-nowrap">⏱️ 5s Previo</span>
                                             )}
                                             {!ex.isRest ? (
                                                 <div className="w-12 h-12 rounded bg-gray-800 p-1 flex-shrink-0 border border-gray-700 overflow-hidden">
