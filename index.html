@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporizador</title>
+    <title>Temporizador Fitboxing</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -46,7 +46,7 @@
             letter-spacing: 1px;
         }
 
-        /* Contenedor del reproductor de vídeo sin texto descriptivo de la ruta */
+        /* Reproductor de vídeo sin texto explicativo de la ruta */
         .video-container {
             width: 100%;
             background: #000;
@@ -149,12 +149,9 @@
 <div class="container">
     <h1>Fitboxing Workout Session</h1>
 
-    <!-- Vídeo (reproduce sin mostrar ruta) -->
+    <!-- Reproductor de vídeo visible sin ruta expuesta -->
     <div class="video-container">
-        <video id="videoPlayer" muted loop playsinline>
-            <source src="videos/video_sesion.mp4" type="video/mp4">
-            Tu navegador no soporta la reproducción de vídeo.
-        </video>
+        <video id="videoPlayer" muted playsinline></video>
     </div>
 
     <!-- Cuenta atrás (solo tiempo restante) -->
@@ -164,7 +161,7 @@
         <div class="round-info" id="roundDisplay">Listo para comenzar</div>
     </div>
 
-    <!-- Canción aleatoria de la carpeta /musica/ -->
+    <!-- Pista musical en reproducción -->
     <div class="music-card">
         <div class="music-title">🎵 Pista Aleatoria en Reproducción:</div>
         <div class="music-track-name" id="currentTrackDisplay">En espera...</div>
@@ -180,7 +177,16 @@
 </div>
 
 <script>
-    // Archivos dentro de la carpeta /musica/
+    // 1. LISTA DE VÍDEOS EN CARPETA /videos/
+    const listaVideos = [
+        "body_pecho_01.mp4",
+        "body_espalda_01.mp4",
+        "body_piernas_01.mp4",
+        "body_hombros_01.mp4",
+        "body_abs_01.mp4"
+    ];
+
+    // 2. LISTA DE MÚSICA EN CARPETA /musica/
     const libreriaMusica = [
         "pista1.mp3",
         "pista2.mp3",
@@ -193,12 +199,32 @@
     let remainingTime = totalDurationSeconds;
     let timerInterval = null;
     let isRunning = false;
+    let currentVideoIndex = 0;
 
     const countdownEl = document.getElementById('countdown');
     const roundDisplayEl = document.getElementById('roundDisplay');
     const trackDisplayEl = document.getElementById('currentTrackDisplay');
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
+
+    // Cargar y reproducir el siguiente vídeo de la secuencia
+    function cargarSiguienteVideo() {
+        if (listaVideos.length === 0) return;
+        
+        const videoName = listaVideos[currentVideoIndex];
+        videoPlayer.src = `videos/${videoName}`;
+        videoPlayer.play().catch(e => console.log("Carga de vídeo en progreso..."));
+
+        // Avanzar al siguiente vídeo de la lista en bucle
+        currentVideoIndex = (currentVideoIndex + 1) % listaVideos.length;
+    }
+
+    // Al finalizar un vídeo, pasa automáticamente al siguiente
+    videoPlayer.onended = () => {
+        if (isRunning) {
+            cargarSiguienteVideo();
+        }
+    };
 
     function reproducirMusicaAleatoria() {
         if (libreriaMusica.length === 0) return;
@@ -226,8 +252,13 @@
         if (isRunning) return;
         isRunning = true;
 
-        // Reproducir el vídeo al iniciar
-        videoPlayer.play();
+        if (!videoPlayer.src || videoPlayer.paused) {
+            if (!videoPlayer.src) {
+                cargarSiguienteVideo();
+            } else {
+                videoPlayer.play();
+            }
+        }
 
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
             reproducirMusicaAleatoria();
@@ -261,6 +292,7 @@
         clearInterval(timerInterval);
         isRunning = false;
         remainingTime = totalDurationSeconds;
+        currentVideoIndex = 0;
         updateDisplay();
         roundDisplayEl.textContent = "Listo para comenzar";
         trackDisplayEl.textContent = "En espera...";
@@ -269,7 +301,8 @@
         audioPlayer.currentTime = 0;
 
         videoPlayer.pause();
-        videoPlayer.currentTime = 0;
+        videoPlayer.removeAttribute('src');
+        videoPlayer.load();
     }
 
     updateDisplay();
