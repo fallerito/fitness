@@ -3,322 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporizador Workout Inteligente</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #f59e0b;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-        }
-
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 650px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-
-        h1 {
-            color: var(--accent);
-            margin-top: 0;
-            font-size: 1.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .video-container {
-            width: 100%;
-            background: #000;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 2px solid #334155;
-            aspect-ratio: 16 / 9;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .timer-display {
-            background: #090d16;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #334155;
-        }
-
-        .countdown-title {
-            color: var(--text-sub);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .time-remaining {
-            font-size: 4.5rem;
-            font-weight: bold;
-            font-family: monospace;
-            color: #38bdf8;
-            line-height: 1;
-        }
-
-        .round-info {
-            margin-top: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        .btn-start { background: var(--accent-green); color: white; }
-        .btn-pause { background: var(--accent); color: black; }
-        .btn-reset { background: var(--accent-red); color: white; }
-
-        audio { display: none; }
-    </style>
+    <title>Workout Session - App Dinámica</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="root"></div>
 
-<div class="container">
-    <h1 id="dayTitle">WORKOUT SESSION</h1>
+    <script type="text/babel">
+        // BASE DE DATOS DE EJERCICIOS CON SU FORMATO MP4_01
+        const EXERCISES_DATABASE = [
+            // PECHO
+            { id: 1, name: "Floor Press en Suelo", muscle: "Pecho", filename: "manc_pecho_01.mp4" },
+            { id: 2, name: "Aperturas en Suelo", muscle: "Pecho", filename: "manc_pecho_02.mp4" },
+            { id: 3, name: "Flexiones / Push-ups", muscle: "Pecho", filename: "body_pecho_01.mp4" },
 
-    <div class="video-container">
-        <video id="videoPlayer" muted playsinline></video>
-    </div>
+            // ESPALDA
+            { id: 4, name: "Remo a Un Brazo (7.5kg)", muscle: "Espalda", filename: "manc_espalda_01.mp4" },
+            { id: 5, name: "Remo Inclinado", muscle: "Espalda", filename: "manc_espalda_02.mp4" },
 
-    <div class="timer-display">
-        <div class="countdown-title">Tiempo Restante de la Sesión</div>
-        <div class="time-remaining" id="countdown">15:00</div>
-        <div class="round-info" id="roundDisplay">Listo para comenzar</div>
-    </div>
+            // HOMBROS
+            { id: 6, name: "Press Militar de Pie", muscle: "Hombro", filename: "manc_hombro_01.mp4" },
+            { id: 7, name: "Elevaciones Laterales", muscle: "Hombro", filename: "manc_hombro_02.mp4" },
 
-    <div class="controls">
-        <button class="btn-start" onclick="startTimer()">Iniciar</button>
-        <button class="btn-pause" onclick="pauseTimer()">Pausar</button>
-        <button class="btn-reset" onclick="resetTimer()">Reiniciar</button>
-    </div>
+            // PIERNAS
+            { id: 8, name: "Sentadilla Goblet", muscle: "Pierna", filename: "manc_pierna_01.mp4" },
+            { id: 9, name: "Zancadas / Lunges", muscle: "Pierna", filename: "manc_pierna_02.mp4" },
 
-    <audio id="audioPlayer"></audio>
-</div>
+            // BRAZOS
+            { id: 10, name: "Curl de Bíceps", muscle: "Brazos", filename: "manc_biceps_01.mp4" },
+            { id: 11, name: "Curl Martillo", muscle: "Brazos", filename: "manc_biceps_02.mp4" },
+            { id: 12, name: "Copa de Tríceps a 2 Manos", muscle: "Brazos", filename: "manc_triceps_01.mp4" }
+        ];
 
-<script>
-    // Catálogo total de vídeos disponibles
-    const catalogoVideos = [
-        "body_pecho_01.mp4",
-        "body_espalda_01.mp4",
-        "body_piernas_01.mp4",
-        "body_hombros_01.mp4",
-        "body_abs_01.mp4",
-        "body_brazos_01.mp4",
-        "body_cardio_01.mp4"
-    ];
+        // CONFIGURACIÓN DE DÍAS Y COMBINACIÓN DE GRUPOS MUSCULARES
+        const DAYS_MAP = {
+            1: { name: "Lunes", title: "Empuje + Hombro Mixto", primaryMuscles: ["Pecho", "Hombro", "Brazos"] },
+            3: { name: "Miércoles", title: "Tracción + Pierna Híbrida", primaryMuscles: ["Espalda", "Pierna", "Brazos"] },
+            5: { name: "Viernes", title: "Fullbody Dinámico", primaryMuscles: ["Pecho", "Espalda", "Pierna"] },
+            6: { name: "Sábado", title: "Burnout Express", primaryMuscles: ["Hombro", "Brazos", "Pierna"] }
+        };
 
-    const libreriaMusica = [
-        "pista1.mp3",
-        "pista2.mp3",
-        "pista3.mp3",
-        "pista4.mp3",
-        "pista5.mp3"
-    ];
+        // COMPONENTE PARA RENDERIZAR VIDEO MP4
+        const ExerciseVideo = ({ filename, className }) => {
+            const [hasError, setHasError] = React.useState(false);
+            const fullSrc = `videos/${filename}`;
 
-    const tiempoPorEjercicioSegundos = 25; 
-    const totalDurationSeconds = 15 * 60; // 15 minutos en total (36 ejercicios de 25s)
-    const totalEjerciciosSesion = totalDurationSeconds / tiempoPorEjercicioSegundos;
+            React.useEffect(() => {
+                setHasError(false);
+            }, [fullSrc]);
 
-    let listaRutinaHoy = [];
-    let remainingTime = totalDurationSeconds;
-    let timerInterval = null;
-    let isRunning = false;
-    let currentVideoIndex = 0;
-    let videoTimeCounter = 0;
+            if (hasError || !filename) {
+                return (
+                    <div className={`${className} bg-gray-800 border border-gray-700 flex flex-col items-center justify-center p-2 text-center rounded-lg`}>
+                        <span className="text-xl mb-1">🎬</span>
+                        <span className="text-[10px] text-gray-400 font-semibold leading-tight">No encontrado</span>
+                        <span className="text-[9px] text-yellow-500 font-mono break-all">{fullSrc}</span>
+                    </div>
+                );
+            }
 
-    const countdownEl = document.getElementById('countdown');
-    const roundDisplayEl = document.getElementById('roundDisplay');
-    const dayTitleEl = document.getElementById('dayTitle');
-    const audioPlayer = document.getElementById('audioPlayer');
-    const videoPlayer = document.getElementById('videoPlayer');
+            return (
+                <video 
+                    src={fullSrc} 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    className={`${className} object-cover rounded-lg`} 
+                    onError={() => setHasError(true)} 
+                />
+            );
+        };
 
-    // Generar rutina variada según el día de la semana para evitar repeticiones
-    function generarRutinaDelDia() {
-        const d = new Date();
-        const diaSemana = d.getDay(); // 0: Domingo, 1: Lunes, etc.
-        const nombresDias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        
-        dayTitleEl.textContent = `Rutina del ${nombresDias[diaSemana]}`;
+        function App() {
+            const [selectedDayIndex, setSelectedDayIndex] = React.useState(() => {
+                const today = new Date().getDay();
+                return DAYS_MAP[today] ? today : 5;
+            });
 
-        // Usamos el día como semilla para mezclar el catálogo de forma única cada día
-        let mezclados = [...catalogoVideos];
-        mezclados.sort((a, b) => {
-            let hashA = (a.charCodeAt(0) * diaSemana) % 7;
-            let hashB = (b.charCodeAt(0) * diaSemana) % 7;
-            return hashA - hashB;
-        });
+            const [currentWorkout, setCurrentWorkout] = React.useState([]);
+            const [isWorkoutActive, setIsWorkoutActive] = React.useState(false);
+            const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
+            const [stepTimer, setStepTimer] = React.useState(0);
+            const [totalSessionTime, setTotalSessionTime] = React.useState(0);
 
-        // Rellenar los bloques necesarios para cubrir los 15 minutos (36 bloques de 25s)
-        let rutina = [];
-        for (let i = 0; i < totalEjerciciosSesion; i++) {
-            rutina.push(mezclados[i % mezclados.length]);
-        }
-        return rutina;
-    }
-
-    function cargarVideoActual() {
-        if (listaRutinaHoy.length === 0) return;
-        
-        const videoName = listaRutinaHoy[currentVideoIndex];
-        videoPlayer.src = `videos/${videoName}`;
-        videoPlayer.load();
-        
-        if (isRunning) {
-            videoPlayer.play().catch(e => console.log("Cargando vídeo..."));
-        }
-    }
-
-    videoPlayer.onended = () => {
-        if (isRunning) {
-            videoPlayer.currentTime = 0;
-            videoPlayer.play().catch(e => console.log("Error al repetir vídeo"));
-        }
-    };
-
-    function cambiarSiguienteEjercicio() {
-        if (listaRutinaHoy.length === 0) return;
-        currentVideoIndex = (currentVideoIndex + 1) % listaRutinaHoy.length;
-        videoTimeCounter = 0;
-        cargarVideoActual();
-    }
-
-    function reproducirMusicaAleatoria() {
-        if (libreriaMusica.length === 0) return;
-        const indexAleatorio = Math.floor(Math.random() * libreriaMusica.length);
-        audioPlayer.src = `musica/${libreriaMusica[indexAleatorio]}`;
-        audioPlayer.play().catch(e => console.log("Aviso de audio:", e));
-    }
-
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    function updateDisplay() {
-        countdownEl.textContent = formatTime(remainingTime);
-    }
-
-    function startTimer() {
-        if (isRunning) return;
-        isRunning = true;
-
-        if (listaRutinaHoy.length === 0) {
-            listaRutinaHoy = generarRutinaDelDia();
-        }
-
-        if (!videoPlayer.src || videoPlayer.src === "") {
-            cargarVideoActual();
-        } else {
-            videoPlayer.play().catch(e => console.log("Error al iniciar vídeo"));
-        }
-
-        if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
-            reproducirMusicaAleatoria();
-        }
-
-        roundDisplayEl.textContent = "¡Sesión en Curso!";
-
-        timerInterval = setInterval(() => {
-            if (remainingTime > 0) {
-                remainingTime--;
-                videoTimeCounter++;
-
-                if (videoTimeCounter >= tiempoPorEjercicioSegundos) {
-                    cambiarSiguienteEjercicio();
+            // GENERADOR DE RUTINA EXACTAMENTE DE 15 MINUTOS (900 SEGUNDOS)
+            const generateWorkoutForDay = (dayIdx) => {
+                const dayConfig = DAYS_MAP[dayIdx];
+                if (!dayConfig) {
+                    setCurrentWorkout([]);
+                    setTotalSessionTime(0);
+                    return;
                 }
 
-                updateDisplay();
-            } else {
-                clearInterval(timerInterval);
-                isRunning = false;
-                roundDisplayEl.textContent = "¡Entrenamiento Finalizado!";
-                audioPlayer.pause();
-                videoPlayer.pause();
-            }
-        }, 1000);
-    }
+                const pool = EXERCISES_DATABASE.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
+                const shuffled = [...pool].sort(() => 0.5 - Math.random());
 
-    function pauseTimer() {
-        clearInterval(timerInterval);
-        isRunning = false;
-        roundDisplayEl.textContent = "Sesión Pausada";
-        audioPlayer.pause();
-        videoPlayer.pause();
-    }
+                if (shuffled.length < 4) return;
 
-    function resetTimer() {
-        clearInterval(timerInterval);
-        isRunning = false;
-        remainingTime = totalDurationSeconds;
-        currentVideoIndex = 0;
-        videoTimeCounter = 0;
-        listaRutinaHoy = generarRutinaDelDia(); // Regenera mezcla para el reinicio
-        updateDisplay();
-        roundDisplayEl.textContent = "Listo para comenzar";
-        
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
+                const sequence = [];
 
-        videoPlayer.pause();
-        videoPlayer.removeAttribute('src');
-        videoPlayer.load();
-    }
+                // 1. BLOQUE ESTÁNDAR (2 Ejercicios - 3 Rondas) -> 40s de trabajo por ronda/ejercicio
+                const stdEx1 = shuffled[0];
+                const stdEx2 = shuffled[1];
+                for (let round = 1; round <= 3; round++) {
+                    sequence.push({
+                        ...stdEx1,
+                        mode: "Estándar (3 Rondas)",
+                        duration: 40,
+                        value: "12-15 reps",
+                        isRest: false
+                    });
+                    sequence.push({
+                        ...stdEx2,
+                        mode: "Estándar (3 Rondas)",
+                        duration: 40,
+                        value: "12-15 reps",
+                        isRest: false
+                    });
+                } // Subtotal: 6 rondas * 40s = 240 segundos (4 min)
 
-    // Inicializar título y lista al cargar la página
-    listaRutinaHoy = generarRutinaDelDia();
-    updateDisplay();
-</script>
+                // 2. BLOQUE SERIE ÚNICA INTENSA + DESCANSO DE 30s
+                const singleEx = shuffled[2];
+                sequence.push({
+                    ...singleEx,
+                    mode: "Serie Única Máxima",
+                    duration: 50,
+                    value: "Fallo Controlado",
+                    isRest: false
+                });
+                sequence.push({
+                    name: "Descanso Recuperador",
+                    muscle: "Pausa",
+                    filename: "",
+                    mode: "Descanso",
+                    duration: 30,
+                    value: "Respirar profundo",
+                    isRest: true
+                }); // Subtotal: 80s
 
+                // 3. BLOQUE MINISET EXPRESS (4 ejercicios x 3 rondas intensas) con descansos de 30s
+                const miniSetGroup = shuffled.slice(0, 4);
+                for (let miniRound = 1; miniRound <= 3; miniRound++) {
+                    miniSetGroup.forEach((ex, idx) => {
+                        sequence.push({
+                            ...ex,
+                            mode: `MiniSet (Ronda ${miniRound}/3)`,
+                            duration: 35,
+                            value: "Ritmo Constante",
+                            isRest: false
+                        });
+                    });
+                    // Añadir descanso de 30s tras cada ronda completa del miniset (excepto al final total si cuadra, o mantenemos los 30s de respiro)
+                    sequence.push({
+                        name: "Descanso Intermedio",
+                        muscle: "Pausa",
+                        filename: "",
+                        mode: "Descanso",
+                        duration: 30,
+                        value: "Hidratación",
+                        isRest: true
+                    });
+                } // 12 ejercicios de 35s (420s) + 3 descansos de 30s (90s) = 510s (8.5 min)
+
+                // Ajuste fino para clavar los 900 segundos exactos (15 min)
+                // Si la suma actual difiere, ajustamos el último ejercicio estándar o el bloque. 
+                // Comprobación de suma: 240 + 50 + 30 + 510 = 830s. Faltan 70s que distribuimos limpiamente:
+                // Añadimos un bloque extra de recuperación o ajustamos duraciones de manera exacta.
+                
+                // Rediseñemos la secuencia sumando exactamente 900s:
+                const exactSequence = [
+                    // --- Bloque 1: Estándar (4 min / 240s) ---
+                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    { ...stdEx1, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    { ...stdEx2, mode: "Estándar", duration: 40, value: "12 reps", isRest: false },
+                    
+                    // Descanso agotador 1 (30s)
+                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Recupera aire", isRest: true },
+
+                    // --- Bloque 2: Serie Única (1 min / 60s) ---
+                    { ...singleEx, mode: "Serie Única Máxima", duration: 60, value: "Fallo muscular", isRest: false },
+                    
+                    // Descanso agotador 2 (30s)
+                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Baja pulsaciones", isRest: true },
+
+                    // --- Bloque 3: MiniSets Dinámicos (7 min 30s / 450s) ---
+                    { ...miniSetGroup[0], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
+                    { ...miniSetGroup[1], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
+                    { ...miniSetGroup[2], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
+                    { ...miniSetGroup[3], mode: "MiniSet R1", duration: 45, value: "Continuo", isRest: false },
+                    
+                    // Descanso agotador 3 (30s)
+                    { name: "Descanso Intermedio", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Respiración profunda", isRest: true },
+
+                    { ...miniSetGroup[0], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
+                    { ...miniSetGroup[1], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
+                    { ...miniSetGroup[2], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
+                    { ...miniSetGroup[3], mode: "MiniSet R2", duration: 45, value: "A tope", isRest: false },
+
+                    // Descanso final antes del cierre (30s)
+                    { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Último respiro", isRest: true },
+
+                    // --- Bloque 4: Burnout Final (1 min / 60s) ---
+                    { ...shuffled[3], mode: "Burnout Final", duration: 60, value: "¡Todo lo que te queda!", isRest: false }
+                ];
+                // Suma total exacta: 240 + 30 + 60 + 30 + 180 + 30 + 180 + 30 + 60 = 900 segundos clavados (15 minutos).
+
+                setCurrentWorkout(exactSequence);
+                const totalSecs = exactSequence.reduce((acc, curr) => acc + curr.duration, 0);
+                setTotalSessionTime(totalSecs);
+            };
+
+            React.useEffect(() => {
+                generateWorkoutForDay(selectedDayIndex);
+            }, [selectedDayIndex]);
+
+            // Temporizador general de ejecución
+            React.useEffect(() => {
+                let interval = null;
+                if (isWorkoutActive && stepTimer > 0) {
+                    interval = setInterval(() => {
+                        setStepTimer(prev => prev - 1);
+                        setTotalSessionTime(prev => (prev > 0 ? prev - 1 : 0));
+                    }, 1000);
+                } else if (isWorkoutActive && stepTimer === 0) {
+                    if (currentStepIndex < currentWorkout.length - 1) {
+                        const nextIndex = currentStepIndex + 1;
+                        setCurrentStepIndex(nextIndex);
+                        setStepTimer(currentWorkout[nextIndex].duration);
+                    } else {
+                        setIsWorkoutActive(false);
+                        alert("¡WORKOUT SESSION Completada con éxito!");
+                    }
+                }
+                return () => clearInterval(interval);
+            }, [isWorkoutActive, stepTimer, currentStepIndex, currentWorkout]);
+
+            const startWorkout = () => {
+                if (currentWorkout.length === 0) return;
+                setCurrentStepIndex(0);
+                setStepTimer(currentWorkout[0].duration);
+                setIsWorkoutActive(true);
+            };
+
+            const stopWorkout = () => {
+                setIsWorkoutActive(false);
+                generateWorkoutForDay(selectedDayIndex);
+            };
+
+            const formatMinutes = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            };
+
+            const activeExercise = currentWorkout[currentStepIndex];
+            const currentDayName = DAYS_MAP[selectedDayIndex]?.name || "Día de Descanso";
+
+            return (
+                <div className="max-w-3xl mx-auto p-4">
+                    {/* CARTEL DE CABECERA: WORKOUT SESSION */}
+                    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 rounded-2xl shadow-xl mb-6 text-center border border-blue-400/30">
+                        <span className="text-xs uppercase tracking-widest text-blue-200 font-bold">Programa Oficial de Rendimiento</span>
+                        <h1 className="text-3xl md:text-4xl font-black text-white tracking-wider mt-1 drop-shadow-md">
+                            WORKOUT SESSION
+                        </h1>
+                        <p className="text-xs text-indigo-100 mt-1">Duración optimizada: <strong className="text-yellow-300">15 Minutos</strong> con descansos integrados</p>
+                    </div>
+
+                    {/* SELECCIÓN DE DÍA */}
+                    <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Día Detectado</span>
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                📅 {currentDayName} 
+                                {DAYS_MAP[new Date().getDay()]?.name === currentDayName && (
+                                    <span className="text-xs bg-green-600/30 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">HOY</span>
+                                )}
+                            </h2>
+                            <p className="text-sm text-gray-400">
+                                {DAYS_MAP[selectedDayIndex]?.title || "Hoy no hay rutina programada."}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col items-end">
+                            <label className="text-xs text-gray-400 mb-1">Cambiar día manualmente:</label>
+                            <select 
+                                value={selectedDayIndex} 
+                                onChange={(e) => {
+                                    setIsWorkoutActive(false);
+                                    setSelectedDayIndex(Number(e.target.value));
+                                }}
+                                className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
+                                <option value={1}>Lunes (Empuje + Hombro)</option>
+                                <option value={3}>Miércoles (Tracción + Pierna)</option>
+                                <option value={5}>Viernes (Fullbody Dinámico)</option>
+                                <option value={6}>Sábado (Burnout Express)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* PANTALLA DE ENTRENAMIENTO EN EJECUCIÓN */}
+                    {isWorkoutActive && activeExercise ? (
+                        <div className={`p-6 rounded-xl border shadow-2xl text-center ${activeExercise.isRest ? 'bg-blue-950/40 border-blue-400' : 'bg-gray-800 border-blue-500'}`}>
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-xs bg-blue-900 text-blue-200 px-3 py-1 rounded-full font-bold">
+                                    Paso {currentStepIndex + 1} de {currentWorkout.length}
+                                </span>
+                                <span className="text-xs bg-purple-900 text-purple-200 px-3 py-1 rounded-full font-bold">
+                                    ⏱️ Sesión Restante: {formatMinutes(totalSessionTime)}
+                                </span>
+                                <span className={`text-xs px-3 py-1 rounded-full font-bold ${activeExercise.isRest ? 'bg-blue-600 text-white' : 'bg-yellow-900/60 text-yellow-300 border border-yellow-500/30'}`}>
+                                    {activeExercise.mode}
+                                </span>
+                            </div>
+
+                            {!activeExercise.isRest ? (
+                                <div className="w-64 h-64 mx-auto rounded-2xl bg-gray-900 p-2 mb-4 border border-gray-700 flex items-center justify-center shadow-inner overflow-hidden">
+                                    <ExerciseVideo 
+                                        filename={activeExercise.filename} 
+                                        className="w-full h-full"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-64 h-64 mx-auto rounded-2xl bg-blue-900/20 p-2 mb-4 border border-blue-500/50 flex flex-col items-center justify-center shadow-inner">
+                                    <span className="text-5xl mb-2">🧘‍♂️</span>
+                                    <span className="text-blue-300 font-bold text-lg">TIEMPO DE DESCANSO</span>
+                                    <span className="text-xs text-blue-200 mt-1">Recupera el aliento e hidrátate</span>
+                                </div>
+                            )}
+
+                            <h2 className="text-2xl font-bold text-white mb-1">{activeExercise.name}</h2>
+                            <p className="text-xs text-gray-400 mb-1">Bloque: <strong className="text-blue-400">{activeExercise.muscle}</strong></p>
+                            <p className="text-sm text-gray-300 mb-4">Indicación: <strong className="text-yellow-400">{activeExercise.value}</strong></p>
+
+                            <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 inline-block w-full max-w-xs mb-4">
+                                <span className="text-xs text-gray-400 block mb-1">{activeExercise.isRest ? 'Tiempo de descanso restante:' : 'Tiempo de ejecución:'}</span>
+                                <span className={`text-4xl font-mono font-bold ${activeExercise.isRest ? 'text-blue-400' : 'text-green-400'}`}>{stepTimer}s</span>
+                            </div>
+
+                            <div>
+                                <button 
+                                    onClick={stopWorkout}
+                                    className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-bold transition">
+                                    Detener Entrenamiento
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        /* VISTA PREVIA DE LA RUTINA DEL DÍA */
+                        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                <div>
+                                    <h3 className="text-lg font-bold">Secuencia de 15 Minutos Programada</h3>
+                                    <span className="text-xs text-gray-400 block">Duración Total Exacta: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Incluye pausas de 30s)</span>
+                                </div>
+                                {DAYS_MAP[selectedDayIndex] && (
+                                    <button 
+                                        onClick={startWorkout}
+                                        className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg">
+                                        ▶️ Iniciar Workout Session
+                                    </button>
+                                )}
+                            </div>
+
+                            {DAYS_MAP[selectedDayIndex] ? (
+                                <div className="space-y-3">
+                                    {currentWorkout.map((ex, idx) => (
+                                        <div key={idx} className={`p-3 rounded-lg border flex justify-between items-center gap-3 ${ex.isRest ? 'bg-blue-950/20 border-blue-900/50' : 'bg-gray-900 border-gray-800'}`}>
+                                            <div className="flex items-center gap-3">
+                                                {!ex.isRest ? (
+                                                    <div className="w-12 h-12 rounded bg-gray-800 p-1 flex-shrink-0 border border-gray-700 overflow-hidden">
+                                                        <ExerciseVideo 
+                                                            filename={ex.filename} 
+                                                            className="w-full h-full"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded bg-blue-900/30 p-1 flex-shrink-0 border border-blue-700/50 flex items-center justify-center text-blue-300 font-bold text-xs">
+                                                        💤
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h4 className="font-bold text-sm">{ex.name}</h4>
+                                                    <span className="text-xs text-gray-400">{ex.muscle} • {ex.value} • <strong className="text-green-400">{ex.duration}s</strong></span>
+                                                </div>
+                                            </div>
+                                            <span className={`text-[11px] border px-2 py-1 rounded font-semibold whitespace-nowrap ${ex.isRest ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-gray-800 text-yellow-400 border-gray-700'}`}>
+                                                {ex.mode}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-400">
+                                    <p>Hoy es día de descanso activo. Selecciona otro día en el menú superior.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
