@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Entrenamiento Dinámico - Variedad de Modos</title>
+    <title>App Entrenamiento Dinámico - Con Tiempo Invertido</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // BASE DE DATOS DE EJERCICIOS CON SU FORMATO MP4_01
+        // BASE DE DATOS DE EJERCICIOS
         const EXERCISES_DATABASE = [
             // PECHO
             { id: 1, name: "Floor Press en Suelo", muscle: "Pecho", filename: "manc_pecho_01.mp4" },
@@ -93,8 +93,11 @@
             const [isWorkoutActive, setIsWorkoutActive] = React.useState(false);
             const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
             const [stepTimer, setStepTimer] = React.useState(0);
+            
+            // ESTADO PARA EL TIEMPO TOTAL INVERTIDO
+            const [totalElapsedTime, setTotalElapsedTime] = React.useState(0);
 
-            // GENERADOR DE RUTINA CON DIVERSIDAD DE MODOS
+            // GENERADOR DE RUTINA
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -102,7 +105,6 @@
                     return;
                 }
 
-                // Filtrar ejercicios por grupos del día y mezclar
                 const pool = EXERCISES_DATABASE.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
                 const shuffled = [...pool].sort(() => 0.5 - Math.random());
 
@@ -110,7 +112,7 @@
 
                 const sequence = [];
 
-                // 1. BLOQUE ESTÁNDAR (2 Ejercicios - 3 Rondas)
+                // 1. BLOQUE ESTÁNDAR
                 const stdEx1 = shuffled[0];
                 const stdEx2 = shuffled[1];
                 for (let round = 1; round <= 3; round++) {
@@ -130,7 +132,7 @@
                     });
                 }
 
-                // 2. BLOQUE SERIE ÚNICA (1 Ejercicio - Solo 1 Ronda Intensa)
+                // 2. BLOQUE SERIE ÚNICA
                 const singleEx = shuffled[2];
                 sequence.push({
                     ...singleEx,
@@ -140,14 +142,14 @@
                     stepTitle: `🔥 SERIE ÚNICA INTENSA - ${singleEx.name}`
                 });
 
-                // 3. BLOQUE MINISET EXPRESS (Grupo de 4 ejercicios dinámicos repetidos en 60s)
+                // 3. BLOQUE MINISET EXPRESS
                 const miniSetGroup = shuffled.slice(0, 4);
                 for (let miniRound = 1; miniRound <= 2; miniRound++) {
                     miniSetGroup.forEach((ex, idx) => {
                         sequence.push({
                             ...ex,
                             mode: `MiniSet 60s (Ronda ${miniRound}/2)`,
-                            duration: 15, // 15s por ejercicio = 60s el bloque entero
+                            duration: 15,
                             value: "Sin Descanso",
                             stepTitle: `⚡ MiniSet 60s (${idx + 1}/4) - ${ex.name}`
                         });
@@ -161,34 +163,49 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
+            // TEMPORIZADOR DEL PASO ACTUAL Y DEL TIEMPO TOTAL INVERTIDO
             React.useEffect(() => {
                 let interval = null;
-                if (isWorkoutActive && stepTimer > 0) {
+                if (isWorkoutActive) {
                     interval = setInterval(() => {
-                        setStepTimer(prev => prev - 1);
+                        setTotalElapsedTime(prev => prev + 1);
+                        setStepTimer(prev => {
+                            if (prev > 1) {
+                                return prev - 1;
+                            } else {
+                                if (currentStepIndex < currentWorkout.length - 1) {
+                                    const nextIndex = currentStepIndex + 1;
+                                    setCurrentStepIndex(nextIndex);
+                                    return currentWorkout[nextIndex].duration;
+                                } else {
+                                    setIsWorkoutActive(false);
+                                    alert("¡Entrenamiento completado!");
+                                    return 0;
+                                }
+                            }
+                        });
                     }, 1000);
-                } else if (isWorkoutActive && stepTimer === 0) {
-                    if (currentStepIndex < currentWorkout.length - 1) {
-                        const nextIndex = currentStepIndex + 1;
-                        setCurrentStepIndex(nextIndex);
-                        setStepTimer(currentWorkout[nextIndex].duration);
-                    } else {
-                        setIsWorkoutActive(false);
-                        alert("¡Entrenamiento Dinámico Completado!");
-                    }
                 }
                 return () => clearInterval(interval);
-            }, [isWorkoutActive, stepTimer, currentStepIndex, currentWorkout]);
+            }, [isWorkoutActive, currentStepIndex, currentWorkout]);
 
             const startWorkout = () => {
                 if (currentWorkout.length === 0) return;
                 setCurrentStepIndex(0);
                 setStepTimer(currentWorkout[0].duration);
+                setTotalElapsedTime(0);
                 setIsWorkoutActive(true);
             };
 
             const stopWorkout = () => {
                 setIsWorkoutActive(false);
+            };
+
+            // FORMATEAR TIEMPO EN MINUTOS Y SEGUNDOS (MM:SS)
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             };
 
             const activeExercise = currentWorkout[currentStepIndex];
@@ -216,7 +233,7 @@
                         </div>
                     </div>
 
-                    {/* ENCABEZADO Y SELECCIÓN DE DÍA */}
+                    {/* ENCABEZADO Y SELECCIÓN DE DÍA CON TIEMPO INVERTIDO */}
                     <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Día Detectado</span>
@@ -231,20 +248,30 @@
                             </p>
                         </div>
 
-                        <div className="flex flex-col items-end">
-                            <label className="text-xs text-gray-400 mb-1">Cambiar día manualmente:</label>
-                            <select 
-                                value={selectedDayIndex} 
-                                onChange={(e) => {
-                                    setIsWorkoutActive(false);
-                                    setSelectedDayIndex(Number(e.target.value));
-                                }}
-                                className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
-                                <option value={1}>Lunes (Empuje + Hombro)</option>
-                                <option value={3}>Miércoles (Tracción + Pierna)</option>
-                                <option value={5}>Viernes (Fullbody Dinámico)</option>
-                                <option value={6}>Sábado (Burnout Express)</option>
-                            </select>
+                        <div className="flex flex-col md:items-end items-center gap-2 w-full md:w-auto">
+                            {/* INDICADOR DE TIEMPO INVERTIDO EN CABECERA */}
+                            {isWorkoutActive && (
+                                <div className="bg-gray-900 border border-blue-500 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow font-mono">
+                                    <span className="text-xs text-gray-400 uppercase font-bold">Tiempo:</span>
+                                    <span className="text-lg font-bold text-blue-400">{formatTime(totalElapsedTime)}</span>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col items-end">
+                                <label className="text-xs text-gray-400 mb-1">Cambiar día manualmente:</label>
+                                <select 
+                                    value={selectedDayIndex} 
+                                    onChange={(e) => {
+                                        setIsWorkoutActive(false);
+                                        setSelectedDayIndex(Number(e.target.value));
+                                    }}
+                                    className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
+                                    <option value={1}>Lunes (Empuje + Hombro)</option>
+                                    <option value={3}>Miércoles (Tracción + Pierna)</option>
+                                    <option value={5}>Viernes (Fullbody Dinámico)</option>
+                                    <option value={6}>Sábado (Burnout Express)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -274,7 +301,7 @@
                             <p className="text-sm text-gray-300 mb-4">Meta: <strong className="text-yellow-400">{activeExercise.value}</strong></p>
 
                             <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 inline-block w-full max-w-xs mb-4">
-                                <span className="text-xs text-gray-400 block mb-1">Tiempo de ejecución:</span>
+                                <span className="text-xs text-gray-400 block mb-1">Tiempo del paso actual:</span>
                                 <span className="text-4xl font-mono font-bold text-green-400">{stepTimer}s</span>
                             </div>
 
