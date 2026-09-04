@@ -146,7 +146,6 @@
 </div>
 
 <script>
-    // LISTA DE VÍDEOS DE EJERCICIOS
     const listaVideos = [
         "body_pecho_01.mp4",
         "body_espalda_01.mp4",
@@ -155,7 +154,6 @@
         "body_abs_01.mp4"
     ];
 
-    // MÚSICA EN CARPETA /musica/
     const libreriaMusica = [
         "pista1.mp3",
         "pista2.mp3",
@@ -164,9 +162,8 @@
         "pista5.mp3"
     ];
 
-    // Parámetros de tiempo
-    const tiempoPorEjercicioSegundos = 25; // Cada ejercicio dura 25 segundos
-    const totalDurationSeconds = 15 * 60;   // 15 minutos totales
+    const tiempoPorEjercicioSegundos = 25; 
+    const totalDurationSeconds = 15 * 60;   
     
     let remainingTime = totalDurationSeconds;
     let timerInterval = null;
@@ -179,32 +176,27 @@
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
 
-    // Cargar y asegurar la reproducción del vídeo actual
+    // Lógica limpia original que funcionaba perfectamente antes de la música
     function cargarVideoActual() {
         if (listaVideos.length === 0) return;
         
         const videoName = listaVideos[currentVideoIndex];
-        videoPlayer.pause();
         videoPlayer.src = `videos/${videoName}`;
         videoPlayer.load();
-
-        // Reproducir únicamente cuando el navegador haya cargado los datos del vídeo
-        videoPlayer.onloadeddata = () => {
-            if (isRunning) {
-                videoPlayer.play().catch(e => console.log("Error al reproducir vídeo:", e));
-            }
-        };
+        
+        if (isRunning) {
+            videoPlayer.play().catch(e => console.log("Cargando vídeo..."));
+        }
     }
 
-    // Reinicia el vídeo actual si es más corto que la duración del ejercicio (bucle)
+    // Bucle nativo fluido para los vídeos de pocos segundos
     videoPlayer.onended = () => {
         if (isRunning) {
             videoPlayer.currentTime = 0;
-            videoPlayer.play().catch(e => console.log("Error en bucle de vídeo:", e));
+            videoPlayer.play().catch(e => console.log("Error al repetir vídeo"));
         }
     };
 
-    // Pasa al siguiente ejercicio de la lista al cumplir los 25 segundos
     function cambiarSiguienteEjercicio() {
         if (listaVideos.length === 0) return;
         currentVideoIndex = (currentVideoIndex + 1) % listaVideos.length;
@@ -214,11 +206,8 @@
 
     function reproducirMusicaAleatoria() {
         if (libreriaMusica.length === 0) return;
-
         const indexAleatorio = Math.floor(Math.random() * libreriaMusica.length);
-        const archivoSeleccionado = libreriaMusica[indexAleatorio];
-        
-        audioPlayer.src = `musica/${archivoSeleccionado}`;
+        audioPlayer.src = `musica/${libreriaMusica[indexAleatorio]}`;
         audioPlayer.play().catch(e => console.log("Aviso de audio:", e));
     }
 
@@ -239,7 +228,7 @@
         if (!videoPlayer.src || videoPlayer.src === "") {
             cargarVideoActual();
         } else {
-            videoPlayer.play().catch(e => console.log("Error al reanudar vídeo:", e));
+            videoPlayer.play().catch(e => console.log("Error al iniciar vídeo"));
         }
 
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
@@ -253,7 +242,6 @@
                 remainingTime--;
                 videoTimeCounter++;
 
-                // Cambiar de ejercicio cada 25 segundos
                 if (videoTimeCounter >= tiempoPorEjercicioSegundos) {
                     cambiarSiguienteEjercicio();
                 }
