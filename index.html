@@ -149,8 +149,7 @@
     <h1>Fitboxing Workout Session</h1>
 
     <div class="video-container">
-        <!-- El atributo loop asegura que se repita continuamente -->
-        <video id="videoPlayer" muted loop playsinline></video>
+        <video id="videoPlayer" muted playsinline></video>
     </div>
 
     <div class="timer-display">
@@ -174,7 +173,7 @@
 </div>
 
 <script>
-    // 1. LISTA DE VÍDEOS DE EJERCICIOS
+    // LISTA DE VÍDEOS DE EJERCICIOS
     const listaVideos = [
         "body_pecho_01.mp4",
         "body_espalda_01.mp4",
@@ -183,7 +182,7 @@
         "body_abs_01.mp4"
     ];
 
-    // 2. MÚSICA EN CARPETA /musica/
+    // MÚSICA EN CARPETA /musica/
     const libreriaMusica = [
         "pista1.mp3",
         "pista2.mp3",
@@ -192,11 +191,15 @@
         "pista5.mp3"
     ];
 
-    const totalDurationSeconds = 15 * 60; // 15 minutos
+    // Parámetros de tiempo
+    const tiempoPorEjercicioSegundos = 30; // Tiempo en segundos antes de pasar al siguiente vídeo
+    const totalDurationSeconds = 15 * 60;   // 15 minutos totales de sesión
+    
     let remainingTime = totalDurationSeconds;
     let timerInterval = null;
     let isRunning = false;
     let currentVideoIndex = 0;
+    let videoTimeCounter = 0;
 
     const countdownEl = document.getElementById('countdown');
     const roundDisplayEl = document.getElementById('roundDisplay');
@@ -204,13 +207,29 @@
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
 
+    // Cargar y reproducir el vídeo actual
     function cargarVideoActual() {
         if (listaVideos.length === 0) return;
         
         const videoName = listaVideos[currentVideoIndex];
         videoPlayer.src = `videos/${videoName}`;
-        videoPlayer.loop = true; // Bucle activado por código
         videoPlayer.play().catch(e => console.log("Cargando vídeo..."));
+    }
+
+    // Reinicia el vídeo actual si dura menos de lo que le corresponde (ej. 7 segundos)
+    videoPlayer.onended = () => {
+        if (isRunning) {
+            videoPlayer.currentTime = 0;
+            videoPlayer.play().catch(e => console.log("Error al repetir vídeo"));
+        }
+    };
+
+    // Pasa al siguiente ejercicio de la lista
+    function cambiarSiguienteEjercicio() {
+        if (listaVideos.length === 0) return;
+        currentVideoIndex = (currentVideoIndex + 1) % listaVideos.length;
+        videoTimeCounter = 0;
+        cargarVideoActual();
     }
 
     function reproducirMusicaAleatoria() {
@@ -254,6 +273,13 @@
         timerInterval = setInterval(() => {
             if (remainingTime > 0) {
                 remainingTime--;
+                videoTimeCounter++;
+
+                // Cambiar al siguiente vídeo cuando se alcancen los 30 segundos del ejercicio actual
+                if (videoTimeCounter >= tiempoPorEjercicioSegundos) {
+                    cambiarSiguienteEjercicio();
+                }
+
                 updateDisplay();
             } else {
                 clearInterval(timerInterval);
@@ -278,6 +304,7 @@
         isRunning = false;
         remainingTime = totalDurationSeconds;
         currentVideoIndex = 0;
+        videoTimeCounter = 0;
         updateDisplay();
         roundDisplayEl.textContent = "Listo para comenzar";
         trackDisplayEl.textContent = "En espera...";
