@@ -96,6 +96,7 @@
         .music-track-name {
             font-size: 1.1rem;
             color: #ffffff;
+            word-break: break-all;
         }
 
         .controls {
@@ -119,41 +120,26 @@
             transform: scale(0.98);
         }
 
-        .btn-start {
-            background: var(--accent-green);
-            color: white;
-        }
+        .btn-start { background: var(--accent-green); color: white; }
+        .btn-pause { background: var(--accent); color: black; }
+        .btn-reset { background: var(--accent-red); color: white; }
 
-        .btn-pause {
-            background: var(--accent);
-            color: black;
-        }
-
-        .btn-reset {
-            background: var(--accent-red);
-            color: white;
-        }
-
-        audio {
-            display: none;
-        }
+        audio { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Fitboxing Session</h1>
+    <h1>Fitboxing Timer</h1>
 
-    <!-- Solo muestra tiempo restante (Cuenta Atrás) -->
     <div class="timer-display">
         <div class="countdown-title">Tiempo Restante</div>
         <div class="time-remaining" id="countdown">15:00</div>
         <div class="round-info" id="roundDisplay">Listo para comenzar</div>
     </div>
 
-    <!-- Pista asignada aleatoriamente -->
     <div class="music-card">
-        <div class="music-title">🎵 Pista Asignada Aleatoriamente:</div>
+        <div class="music-title">🎵 Pista Aleatoria de la Carpeta:</div>
         <div class="music-track-name" id="currentTrackDisplay">En espera...</div>
     </div>
 
@@ -167,16 +153,17 @@
 </div>
 
 <script>
-    // Tu lista de canciones guardadas
-    const playlist = [
-        { name: "Canción 1 (Electro House - 135 BPM)", src: "cancion1.mp3" },
-        { name: "Canción 2 (Synthwave - 140 BPM)", src: "cancion2.mp3" },
-        { name: "Canción 3 (Drum & Bass - 145 BPM)", src: "cancion3.mp3" },
-        { name: "Canción 4 (Trap Motivacional - 130 BPM)", src: "cancion4.mp3" },
-        { name: "Canción 5 (High Energy EDM - 150 BPM)", src: "cancion5.mp3" }
+    // LISTA DE ARCHIVOS DENTRO DE TU CARPETA /musica/
+    // Pon aquí los nombres exactos de tus archivos MP3:
+    const libreriaMusica = [
+        "pista1.mp3",
+        "pista2.mp3",
+        "pista3.mp3",
+        "pista4.mp3",
+        "pista5.mp3"
     ];
 
-    const totalDurationSeconds = 15 * 60; // Duración total (ej. 15 min)
+    const totalDurationSeconds = 15 * 60; // 15 minutos
     let remainingTime = totalDurationSeconds;
     let timerInterval = null;
     let isRunning = false;
@@ -186,20 +173,20 @@
     const trackDisplayEl = document.getElementById('currentTrackDisplay');
     const audioPlayer = document.getElementById('audioPlayer');
 
-    // Selección aleatoria de música
-    function getRandomTrack() {
-        const randomIndex = Math.floor(Math.random() * playlist.length);
-        return playlist[randomIndex];
-    }
+    // Cargar y reproducir archivo aleatorio desde /musica/
+    function reproducirMusicaAleatoria() {
+        if (libreriaMusica.length === 0) return;
 
-    function playRandomMusic() {
-        const track = getRandomTrack();
-        trackDisplayEl.textContent = track.name;
+        const indexAleatorio = Math.floor(Math.random() * libreriaMusica.length);
+        const archivoSeleccionado = libreriaMusica[indexAleatorio];
         
-        if (track.src) {
-            audioPlayer.src = track.src;
-            audioPlayer.play().catch(e => console.log("Reproducción automática pendiente de interacción."));
-        }
+        // Asignar ruta de la carpeta /musica/
+        audioPlayer.src = `musica/${archivoSeleccionado}`;
+        trackDisplayEl.textContent = archivoSeleccionado;
+
+        audioPlayer.play().catch(e => {
+            console.log("Aviso: Comprueba que los archivos existen dentro de la carpeta /musica/");
+        });
     }
 
     function formatTime(seconds) {
@@ -217,7 +204,7 @@
         isRunning = true;
 
         if (remainingTime === totalDurationSeconds || audioPlayer.paused) {
-            playRandomMusic();
+            reproducirMusicaAleatoria();
         }
 
         roundDisplayEl.textContent = "¡Sesión en Curso!";
