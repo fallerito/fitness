@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.6";
+        const APP_VERSION = "v1.7";
 
         const EXERCISES_DATABASE = [
             { id: 1, name: "Floor Press", muscle: "Chest", filename: "manc_pecho_01.mp4" },
@@ -36,6 +36,39 @@
             5: { name: "Friday", title: "Dynamic Fullbody", primaryMuscles: ["Chest", "Back", "Legs"] },
             6: { name: "Saturday", title: "Express Burnout", primaryMuscles: ["Shoulders", "Arms", "Legs"] }
         };
+
+        const MILITARY_QUOTES = [
+            {
+                en: "It pays to be a winner. Under pressure, you don't rise to the occasion, you sink to the level of your training.",
+                es: "Vale la pena ser un ganador. Bajo presión, no asciendes a la altura de las circunstancias, sino que caes al nivel de tu entrenamiento.",
+                author: "Navy SEALs"
+            },
+            {
+                en: "The only easy day was yesterday.",
+                es: "El único día fácil fue ayer.",
+                author: "US Navy SEAL Motto"
+            },
+            {
+                en: "Who dares wins.",
+                es: "Quien atreve, vence.",
+                author: "British SAS Motto"
+            },
+            {
+                en: "Pain is weakness leaving the body.",
+                es: "El dolor es la debilidad abandonando el cuerpo.",
+                author: "Military Fitness"
+            },
+            {
+                en: "Never quit. Your mind will quit 100 times before your body ever does.",
+                es: "Nunca te rindais. Tu mente se rendirá 100 veces antes de que lo haga tu cuerpo.",
+                author: "Special Operations"
+            },
+            {
+                en: "Sweat saves blood, blood saves lives, but brains save both.",
+                es: "El sudor ahorra sangre, la sangre ahorra vidas, pero el cerebro salva ambas.",
+                author: "US Army / Special Ops"
+            }
+        ];
 
         const ExerciseVideo = ({ filename, className }) => {
             const [hasError, setHasError] = React.useState(false);
@@ -75,6 +108,7 @@
 
             const [currentWorkout, setCurrentWorkout] = React.useState([]);
             const [isWorkoutActive, setIsWorkoutActive] = React.useState(false);
+            const [isCompleted, setIsCompleted] = React.useState(false);
             const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
             
             const [isCountdownActive, setIsCountdownActive] = React.useState(false);
@@ -83,6 +117,7 @@
             const [totalSessionTime, setTotalSessionTime] = React.useState(0);
             
             const [currentTrack, setCurrentTrack] = React.useState("pista1.mp3");
+            const [selectedQuote, setSelectedQuote] = React.useState(MILITARY_QUOTES[0]);
 
             const audioRef = React.useRef(null);
 
@@ -181,8 +216,12 @@
                         setIsCountdownActive(true);
                     } else {
                         setIsWorkoutActive(false);
+                        setIsCompleted(true);
                         if (audioRef.current) audioRef.current.pause();
-                        alert("Workout Session completed successfully!");
+                        
+                        // Seleccionar una frase motivadora aleatoria al terminar
+                        const randomQuote = MILITARY_QUOTES[Math.floor(Math.random() * MILITARY_QUOTES.length)];
+                        setSelectedQuote(randomQuote);
                     }
                 }
                 return () => clearInterval(interval);
@@ -195,6 +234,7 @@
                 const chosenTrack = `pista${randomTrackNum}.mp3`;
                 setCurrentTrack(chosenTrack);
 
+                setIsCompleted(false);
                 setCurrentStepIndex(0);
                 setCountdownTimer(5);
                 setIsCountdownActive(true);
@@ -213,6 +253,7 @@
             const stopWorkout = () => {
                 setIsWorkoutActive(false);
                 setIsCountdownActive(false);
+                setIsCompleted(false);
                 if (audioRef.current) audioRef.current.pause();
                 generateWorkoutForDay(selectedDayIndex);
             };
@@ -238,41 +279,74 @@
                         <h1 className="text-3xl md:text-4xl font-black text-white tracking-wider mt-1 drop-shadow-md">
                             WORKOUT SESSION
                         </h1>
-                        <p className="text-xs text-indigo-100 mt-1">High-Intensity Guided Session (Random Music)</p>
+                        <p className="text-xs text-indigo-100 mt-1">High-Intensity Guided Session</p>
                     </div>
 
-                    <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div>
-                            <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Detected Day</span>
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                📅 {currentDayName} 
+                    {!isWorkoutActive && !isCompleted && (
+                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div>
+                                <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Detected Day</span>
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    📅 {currentDayName} 
+                                </h2>
+                                <p className="text-sm text-gray-400">{DAYS_MAP[selectedDayIndex]?.title}</p>
+                            </div>
+
+                            <div className="flex flex-col items-end">
+                                <label className="text-xs text-gray-400 mb-1">Change day manually:</label>
+                                <select 
+                                    value={selectedDayIndex} 
+                                    onChange={(e) => {
+                                        setSelectedDayIndex(Number(e.target.value));
+                                    }}
+                                    className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
+                                    <option value={1}>Monday (Push + Shoulders)</option>
+                                    <option value={3}>Wednesday (Pull + Legs)</option>
+                                    <option value={5}>Friday (Dynamic Fullbody)</option>
+                                    <option value={6}>Saturday (Express Burnout)</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    {isCompleted ? (
+                        /* PANTALLA DE FINALIZACIÓN CON FRASE MOTIVADORA Y ESTILO REQUERIDO */
+                        <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 rounded-2xl border-2 border-amber-500 shadow-2xl text-center animate-fadeIn">
+                            <div className="mb-4">
+                                <span className="text-6xl">🎖️</span>
+                            </div>
+                            
+                            {/* Título en grande y resaltado requerido */}
+                            <h2 className="text-3xl md:text-4xl font-black text-amber-400 tracking-wide uppercase drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)] mb-6">
+                                ¡¡¡Máximo Esfuerzo Escuela JeongSin!!!
                             </h2>
-                            <p className="text-sm text-gray-400">{DAYS_MAP[selectedDayIndex]?.title}</p>
-                        </div>
 
-                        <div className="flex flex-col items-end">
-                            <label className="text-xs text-gray-400 mb-1">Change day manually:</label>
-                            <select 
-                                value={selectedDayIndex} 
-                                onChange={(e) => {
-                                    setIsWorkoutActive(false);
-                                    setSelectedDayIndex(Number(e.target.value));
-                                }}
-                                className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
-                                <option value={1}>Monday (Push + Shoulders)</option>
-                                <option value={3}>Wednesday (Pull + Legs)</option>
-                                <option value={5}>Friday (Dynamic Fullbody)</option>
-                                <option value={6}>Saturday (Express Burnout)</option>
-                            </select>
-                        </div>
-                    </div>
+                            <div className="bg-gray-800/80 border border-amber-500/40 p-6 rounded-xl mb-6 shadow-inner text-left max-w-xl mx-auto">
+                                <span className="text-xs font-mono text-amber-300 uppercase tracking-widest block mb-2 font-bold">
+                                    Special Forces Motivation ({selectedQuote.author})
+                                </span>
+                                <p className="text-base md:text-lg text-gray-100 italic mb-4 font-serif">
+                                    "{selectedQuote.en}"
+                                </p>
+                                <div className="border-t border-gray-700 pt-3">
+                                    <p className="text-sm md:text-base text-blue-300 font-medium">
+                                        "{selectedQuote.es}"
+                                    </p>
+                                </div>
+                            </div>
 
-                    {isWorkoutActive && activeExercise ? (
+                            <button 
+                                onClick={() => setIsCompleted(false)}
+                                className="bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg tracking-wide uppercase text-sm">
+                                Volver al Panel Principal
+                            </button>
+                        </div>
+                    ) : isWorkoutActive && activeExercise ? (
                         <div className="p-6 rounded-xl border shadow-2xl text-center bg-gray-800 border-blue-500">
                             {isCountdownActive ? (
                                 <div className="py-10">
                                     <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                                        Playing random track: {currentTrack}
+                                        Playing track: {currentTrack}
                                     </span>
                                     <div className="w-48 h-48 mx-auto my-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center shadow-2xl border-4 border-amber-300 animate-pulse">
                                         <span className="text-6xl font-black text-white font-mono">{countdownTimer}</span>
@@ -344,7 +418,7 @@
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                 <div>
                                     <h3 className="text-lg font-bold">Scheduled Sequence</h3>
-                                    <span className="text-xs text-gray-400 block">Total Duration: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (A random track will be selected from the 9 available)</span>
+                                    <span className="text-xs text-gray-400 block">Total Duration: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Random track selected upon start)</span>
                                 </div>
                                 {DAYS_MAP[selectedDayIndex] && (
                                     <button 
