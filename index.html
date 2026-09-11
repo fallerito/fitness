@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,10 +13,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // CONTADOR DE VERSIÓN DE LA APLICACIÓN
-        const APP_VERSION = "v1.3";
+        const APP_VERSION = "v1.5";
 
-        // BASE DE DATOS DE EJERCICIOS
         const EXERCISES_DATABASE = [
             { id: 1, name: "Floor Press en Suelo", muscle: "Pecho", filename: "manc_pecho_01.mp4" },
             { id: 2, name: "Aperturas en Suelo", muscle: "Pecho", filename: "manc_pecho_02.mp4" },
@@ -33,7 +30,6 @@
             { id: 12, name: "Copa de Tríceps a 2 Manos", muscle: "Brazos", filename: "manc_triceps_01.mp4" }
         ];
 
-        // CONFIGURACIÓN DE DÍAS
         const DAYS_MAP = {
             1: { name: "Lunes", title: "Empuje + Hombro Mixto", primaryMuscles: ["Pecho", "Hombro", "Brazos"] },
             3: { name: "Miércoles", title: "Tracción + Pierna Híbrida", primaryMuscles: ["Espalda", "Pierna", "Brazos"] },
@@ -41,18 +37,6 @@
             6: { name: "Sábado", title: "Burnout Express", primaryMuscles: ["Hombro", "Brazos", "Pierna"] }
         };
 
-        // GESTIÓN INTERNA DE LAS PISTAS AUTOMÁTICAS
-        const MUSIC_TRACKS = {
-            pista1: "musica/pista1.mp3",
-            pista2: "musica/pista2.mp3",
-            pista3: "musica/pista3.mp3",
-            pista4: "musica/pista4.mp3",
-            pista5: "musica/pista5.mp3",
-            pista6: "musica/pista6.mp3",
-            pista7: "musica/pista7.mp3"
-        };
-
-        // COMPONENTE DE VIDEO DE EJERCICIO
         const ExerciseVideo = ({ filename, className }) => {
             const [hasError, setHasError] = React.useState(false);
             const fullSrc = `videos/${filename}`;
@@ -93,17 +77,15 @@
             const [isWorkoutActive, setIsWorkoutActive] = React.useState(false);
             const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
             
-            // ESTADOS DE CONTROL DE TIEMPO
             const [isCountdownActive, setIsCountdownActive] = React.useState(false);
             const [countdownTimer, setCountdownTimer] = React.useState(5);
             const [stepTimer, setStepTimer] = React.useState(0);
             const [totalSessionTime, setTotalSessionTime] = React.useState(0);
+            
+            const [currentTrack, setCurrentTrack] = React.useState("pista1.mp3");
 
-            // ESTADOS DE AUDIO OCULTO
             const audioRef = React.useRef(null);
-            const [currentMusicSrc, setCurrentMusicSrc] = React.useState(MUSIC_TRACKS.pista1);
 
-            // Función para hablar con voz sintetizada
             const speakMotivational = (text) => {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
@@ -115,7 +97,6 @@
                 }
             };
 
-            // Generador de rutina
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -134,18 +115,13 @@
                 const miniSetGroup = shuffled.slice(0, 4);
 
                 const exactSequence = [
-                    { ...stdEx1, mode: "Estándar", duration: 30, value: "12 reps", isRest: false, musicBlock: 'pista1', isBlockStart: true },
-                    { ...stdEx2, mode: "Estándar", duration: 30, value: "12 reps", isRest: false, musicBlock: 'pista1', isBlockStart: true },
-                    { ...stdEx1, mode: "Estándar", duration: 30, value: "12 reps", isRest: false, musicBlock: 'pista2', isBlockStart: true },
-                    { ...stdEx2, mode: "Estándar", duration: 30, value: "12 reps", isRest: false, musicBlock: 'pista2', isBlockStart: true },
-                    
-                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Recupera aire", isRest: true, musicBlock: 'pista3', isBlockStart: true },
-                    
-                    { ...singleEx, mode: "Serie Única Máxima", duration: 30, value: "Fallo muscular", isRest: false, musicBlock: 'pista4', isBlockStart: true },
-                    
-                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Baja pulsaciones", isRest: true, musicBlock: 'pista4', isBlockStart: false },
-
-                    // BLOQUE DE MINI-SETS (4 videos simultáneos, 120 segundos / 2 minutos)
+                    { ...stdEx1, mode: "Estándar", duration: 60, value: "12 reps", isRest: false },
+                    { ...stdEx2, mode: "Estándar", duration: 60, value: "12 reps", isRest: false },
+                    { ...stdEx1, mode: "Estándar", duration: 60, value: "12 reps", isRest: false },
+                    { ...stdEx2, mode: "Estándar", duration: 60, value: "12 reps", isRest: false },
+                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 60, value: "Recupera aire", isRest: true },
+                    { ...singleEx, mode: "Serie Única Máxima", duration: 60, value: "Fallo muscular", isRest: false },
+                    { name: "Descanso Activo", muscle: "Pausa", filename: "", mode: "Descanso", duration: 60, value: "Baja pulsaciones", isRest: true },
                     { 
                         name: "Mini-Sets Simultáneos", 
                         muscle: "Multizona", 
@@ -153,17 +129,13 @@
                         isMiniSet: true,
                         exercises: miniSetGroup,
                         mode: "MiniSets Bloque", 
-                        duration: 120, 
+                        duration: 180, 
                         value: "8 reps por ejercicio", 
                         isRest: false, 
-                        musicBlock: 'pista5', 
-                        isBlockStart: true,
                         speechText: "¡Mini-Sets!" 
                     },
-
-                    { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 30, value: "Último respiro", isRest: true, musicBlock: 'pista6', isBlockStart: true },
-
-                    { ...shuffled[3], mode: "Burnout Final", duration: 30, value: "¡Todo lo que te queda!", isRest: false, musicBlock: 'pista7', isBlockStart: true }
+                    { name: "Descanso Final", muscle: "Pausa", filename: "", mode: "Descanso", duration: 60, value: "Último respiro", isRest: true },
+                    { ...shuffled[3], mode: "Burnout Final", duration: 50, value: "¡Todo lo que te queda!", isRest: false }
                 ];
 
                 setCurrentWorkout(exactSequence);
@@ -175,7 +147,6 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Cuenta regresiva de 5 segundos antes de cada ejercicio
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && isCountdownActive && countdownTimer > 0) {
@@ -195,7 +166,6 @@
                 return () => clearInterval(interval);
             }, [isWorkoutActive, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
 
-            // Temporizador principal de ejercicios
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && !isCountdownActive && stepTimer > 0) {
@@ -207,18 +177,6 @@
                     if (currentStepIndex < currentWorkout.length - 1) {
                         const nextIndex = currentStepIndex + 1;
                         setCurrentStepIndex(nextIndex);
-                        
-                        const nextItem = currentWorkout[nextIndex];
-                        const currentItem = currentWorkout[currentStepIndex];
-
-                        if (nextItem.musicBlock !== currentItem.musicBlock) {
-                            setCurrentMusicSrc(MUSIC_TRACKS[nextItem.musicBlock]);
-                            if (audioRef.current) {
-                                audioRef.current.currentTime = 0;
-                                audioRef.current.play().catch(e => console.log(e));
-                            }
-                        }
-
                         setCountdownTimer(5);
                         setIsCountdownActive(true);
                     } else {
@@ -228,21 +186,24 @@
                     }
                 }
                 return () => clearInterval(interval);
-            }, [isWorkoutActive, isCountdownActive, stepTimer, currentStepIndex, currentWorkout]);
+            }, [isWorkoutActive, !isCountdownActive, stepTimer, currentStepIndex, currentWorkout]);
 
             const startWorkout = () => {
                 if (currentWorkout.length === 0) return;
+                
+                // Selecciona una pista aleatoria entre pista1.mp3 y pista9.mp3
+                const randomTrackNum = Math.floor(Math.random() * 9) + 1;
+                const chosenTrack = `pista${randomTrackNum}.mp3`;
+                setCurrentTrack(chosenTrack);
+
                 setCurrentStepIndex(0);
-                
-                const firstItem = currentWorkout[0];
-                setCurrentMusicSrc(MUSIC_TRACKS[firstItem.musicBlock]);
-                
                 setCountdownTimer(5);
                 setIsCountdownActive(true);
                 setIsWorkoutActive(true);
 
                 setTimeout(() => {
                     if (audioRef.current) {
+                        audioRef.current.load(); // Recarga con la nueva pista seleccionada
                         audioRef.current.currentTime = 0;
                         audioRef.current.volume = 0.7;
                         audioRef.current.play().catch(e => console.log(e));
@@ -268,10 +229,9 @@
 
             return (
                 <div className="max-w-3xl mx-auto p-4">
-                    {/* AUDIO OCULTO */}
-                    <audio ref={audioRef} src={currentMusicSrc} loop />
+                    {/* Reproductor con la pista aleatoria escogida */}
+                    <audio ref={audioRef} src={`musica/${currentTrack}`} loop />
 
-                    {/* CABECERA CON CONTADOR DE VERSIÓN */}
                     <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 rounded-2xl shadow-xl mb-6 text-center border border-blue-400/30">
                         <span className="absolute top-3 right-4 bg-black/30 text-gray-300 text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10">
                             {APP_VERSION}
@@ -280,10 +240,9 @@
                         <h1 className="text-3xl md:text-4xl font-black text-white tracking-wider mt-1 drop-shadow-md">
                             WORKOUT SESSION
                         </h1>
-                        <p className="text-xs text-indigo-100 mt-1">Sesión guiada de alta intensidad</p>
+                        <p className="text-xs text-indigo-100 mt-1">Sesión guiada de alta intensidad (Música Aleatoria)</p>
                     </div>
 
-                    {/* SELECCIÓN DE DÍA */}
                     <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Día Detectado</span>
@@ -310,15 +269,12 @@
                         </div>
                     </div>
 
-                    {/* PANTALLA DE ENTRENAMIENTO */}
                     {isWorkoutActive && activeExercise ? (
                         <div className="p-6 rounded-xl border shadow-2xl text-center bg-gray-800 border-blue-500">
-                            
-                            {/* PANTALLA DE CUENTA REGRESIVA DE 5 SEGUNDOS */}
                             {isCountdownActive ? (
                                 <div className="py-10">
                                     <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                                        Preparando siguiente bloque
+                                        Reproduciendo aleatoria: {currentTrack}
                                     </span>
                                     <div className="w-48 h-48 mx-auto my-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center shadow-2xl border-4 border-amber-300 animate-pulse">
                                         <span className="text-6xl font-black text-white font-mono">{countdownTimer}</span>
@@ -328,21 +284,19 @@
                                     <p className="text-xs text-gray-400 mt-1">Colócate en posición y ajusta tu peso</p>
                                 </div>
                             ) : (
-                                /* PANTALLA DE EJERCICIO EN CURSO */
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="text-xs bg-blue-900 text-blue-200 px-3 py-1 rounded-full font-bold">
                                             Paso {currentStepIndex + 1} de {currentWorkout.length}
                                         </span>
                                         <span className="text-xs bg-purple-900 text-purple-200 px-3 py-1 rounded-full font-bold">
-                                            ⏱️ Sesión Restante: {formatMinutes(totalSessionTime)}
+                                            ⏱️ Restante: {formatMinutes(totalSessionTime)}
                                         </span>
                                         <span className="text-xs px-3 py-1 rounded-full font-bold bg-yellow-900/60 text-yellow-300 border border-yellow-500/30">
-                                            {activeExercise.mode}
+                                            🎵 {currentTrack}
                                         </span>
                                     </div>
 
-                                    {/* RENDERIZADO CONDICIONAL DE MINI-SETS (4 VIDEOS SIMULTÁNEOS) */}
                                     {activeExercise.isMiniSet ? (
                                         <div className="relative w-80 h-80 mx-auto mb-4 grid grid-cols-2 gap-2 p-2 bg-gray-900 rounded-2xl border border-purple-500/50 shadow-inner">
                                             {activeExercise.exercises.map((ex, i) => (
@@ -350,7 +304,6 @@
                                                     <ExerciseVideo filename={ex.filename} className="w-full h-full" />
                                                 </div>
                                             ))}
-                                            {/* NÚMERO 8 EN EL CENTRO */}
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                                 <div className="w-20 h-20 rounded-full bg-purple-600/90 border-4 border-purple-300 flex items-center justify-center shadow-2xl animate-bounce">
                                                     <span className="text-4xl font-black text-white font-mono">8</span>
@@ -389,12 +342,11 @@
                             </div>
                         </div>
                     ) : (
-                        /* VISTA PREVIA */
                         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                 <div>
                                     <h3 className="text-lg font-bold">Secuencia Programada</h3>
-                                    <span className="text-xs text-gray-400 block">Duración Estimada: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong></span>
+                                    <span className="text-xs text-gray-400 block">Duración Total: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Se elegirá una pista aleatoria de las 9 disponibles)</span>
                                 </div>
                                 {DAYS_MAP[selectedDayIndex] && (
                                     <button 
@@ -446,4 +398,3 @@
     </script>
 </body>
 </html>
-
