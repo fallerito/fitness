@@ -13,28 +13,63 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.10";
+        const APP_VERSION = "v1.12";
 
-        const EXERCISES_DATABASE = [
-            { id: 1, name: "Floor Press", muscle: "Chest", filename: "manc_pecho_01.mp4" },
-            { id: 2, name: "Floor Chest Flyes", muscle: "Chest", filename: "manc_pecho_02.mp4" },
-            { id: 3, name: "Push-ups", muscle: "Chest", filename: "body_pecho_01.mp4" },
-            { id: 4, name: "One-Arm Row (7.5kg)", muscle: "Back", filename: "manc_espalda_01.mp4" },
-            { id: 5, name: "Bent-over Row", muscle: "Back", filename: "manc_espalda_02.mp4" },
-            { id: 6, name: "Standing Overhead Press", muscle: "Shoulders", filename: "manc_hombro_01.mp4" },
-            { id: 7, name: "Lateral Raises", muscle: "Shoulders", filename: "manc_hombro_02.mp4" },
-            { id: 8, name: "Goblet Squat", muscle: "Legs", filename: "manc_pierna_01.mp4" },
-            { id: 9, name: "Lunges", muscle: "Legs", filename: "manc_pierna_02.mp4" },
-            { id: 10, name: "Bicep Curls", muscle: "Arms", filename: "manc_biceps_01.mp4" },
-            { id: 11, name: "Hammer Curls", muscle: "Arms", filename: "manc_biceps_02.mp4" },
-            { id: 12, name: "Two-Hand Tricep Extension", muscle: "Arms", filename: "manc_triceps_01.mp4" }
+        // LISTA EXACTA DE VÍDEOS DE LA CARPETA (Autogenerada dinámicamente)
+        const RAW_VIDEOS_LIST = [
+            "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
+            "body_cuello_01.mp4",
+            "body_gluteo_01.mp4", "body_gluteo_02.mp4",
+            "body_lateral_01.mp4", "body_lateral_02.mp4",
+            "body_pecho_01.mp4", "body_pecho_02.mp4",
+            "body_pierna_01.mp4", "body_pierna_02.mp4", "body_pierna_03.mp4", "body_pierna_04.mp4",
+            "manc_abdominal_01.mp4", "manc_abdominal_02.mp4", "manc_abdominal_03.mp4", "manc_abdominal_04.mp4",
+            "manc_biceps_01.mp4", "manc_biceps_02.mp4", "manc_biceps_03.mp4", "manc_biceps_04.mp4",
+            "manc_culo_01.mp4", "manc_culo_02.mp4",
+            "manc_espalda_01.mp4", "manc_espalda_02.mp4", "manc_espalda_03.mp4",
+            "manc_hombro_01.mp4", "manc_hombro_02.mp4",
+            "manc_lateral_01.mp4", "manc_lateral_02.mp4",
+            "manc_pecho_01.mp4", "manc_pecho_02.mp4",
+            "manc_pierna_01.mp4", "manc_pierna_02.mp4", "manc_pierna_03.mp4",
+            "manc_triceps_01.mp4", "manc_triceps_02.mp4", "manc_triceps_03.mp4", "manc_triceps_04.mp4"
         ];
 
+        // FUNCIÓN INTELIGENTE: Convierte los nombres de archivo en una base de datos estructurada automáticamente
+        const generateDatabaseFromFiles = () => {
+            return RAW_VIDEOS_LIST.map((filename, index) => {
+                const parts = filename.replace('.mp4', '').split('_');
+                // parts[0] = tipo (body o manc)
+                // parts[1] = grupo muscular (abdominal, cuello, gluteo, lateral, pecho, pierna, biceps, culo, espalda, hombro, triceps)
+                const toolType = parts[0] === 'body' ? 'Bodyweight' : 'Dumbbell';
+                const rawMuscle = parts[1] || 'General';
+                
+                // Normalizar nombres de músculos para mapearlos con los días de entrenamiento
+                let mappedMuscle = rawMuscle.charAt(0).toUpperCase() + rawMuscle.slice(1);
+                if (rawMuscle === 'culo' || rawMuscle === 'gluteo') mappedMuscle = 'Legs';
+                if (rawMuscle === 'abdominal') mappedMuscle = 'Core';
+                if (rawMuscle === 'cuello' || rawMuscle === 'lateral') mappedMuscle = 'Fullbody';
+
+                // Dar un nombre legible al ejercicio basado en su archivo
+                const formattedName = `${toolType} ${rawMuscle.toUpperCase()} #${parts[2] || '1'}`;
+
+                return {
+                    id: index + 1,
+                    name: formattedName,
+                    muscle: mappedMuscle,
+                    rawMuscle: rawMuscle,
+                    filename: filename,
+                    tool: toolType
+                };
+            });
+        };
+
+        const EXERCISES_DATABASE = generateDatabaseFromFiles();
+
         const DAYS_MAP = {
-            1: { name: "Monday", title: "Push + Mixed Shoulders", primaryMuscles: ["Chest", "Shoulders", "Arms"] },
+            1: { name: "Monday", title: "Push + Mixed Core/Upper", primaryMuscles: ["Chest", "Shoulders", "Arms", "Core"] },
             3: { name: "Wednesday", title: "Pull + Hybrid Legs", primaryMuscles: ["Back", "Legs", "Arms"] },
-            5: { name: "Friday", title: "Dynamic Fullbody", primaryMuscles: ["Chest", "Back", "Legs"] },
-            6: { name: "Saturday", title: "Express Burnout", primaryMuscles: ["Shoulders", "Arms", "Legs"] }
+            5: { name: "Friday", title: "Dynamic Fullbody", primaryMuscles: ["Chest", "Back", "Legs", "Fullbody"] },
+            6: { name: "Saturday", title: "Express Burnout", primaryMuscles: ["Shoulders", "Arms", "Legs", "Core"] }
         };
 
         const MILITARY_QUOTES = [
@@ -132,6 +167,7 @@
                 }
             };
 
+            // GENERADOR DINÁMICO CON CONTROL ANTI-REPETICIÓN ABSOLUTO
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -140,18 +176,31 @@
                     return;
                 }
 
-                const pool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
-                const preferredPool = pool.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
-                const otherPool = pool.filter(ex => !dayConfig.primaryMuscles.includes(ex.muscle));
-                const combinedPool = [...preferredPool, ...otherPool];
+                const shuffledPool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
+                const preferred = shuffledPool.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
+                const others = shuffledPool.filter(ex => !dayConfig.primaryMuscles.includes(ex.muscle));
+                const masterList = [...preferred, ...others];
 
-                if (combinedPool.length < 6) return;
+                const usedIds = new Set();
+                const getUniqueExercise = (fallbackList) => {
+                    for (let ex of fallbackList) {
+                        if (!usedIds.has(ex.id)) {
+                            usedIds.add(ex.id);
+                            return ex;
+                        }
+                    }
+                    return fallbackList[Math.floor(Math.random() * fallbackList.length)];
+                };
 
-                const stdEx1 = combinedPool[0];
-                const stdEx2 = combinedPool[1];
-                const singleEx = combinedPool[2];
-                const burnoutEx = combinedPool[3];
-                const miniSetGroup = combinedPool.slice(4, 8);
+                const stdEx1 = getUniqueExercise(masterList);
+                const stdEx2 = getUniqueExercise(masterList);
+                const singleEx = getUniqueExercise(masterList);
+                const burnoutEx = getUniqueExercise(masterList);
+
+                const miniSetGroup = [];
+                for (let i = 0; i < 4; i++) {
+                    miniSetGroup.push(getUniqueExercise(masterList));
+                }
 
                 const exactSequence = [
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
@@ -186,7 +235,7 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Temporizador de cuenta atrás inicial (5s)
+            // Cuenta atrás inicial (5s)
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && isCountdownActive && countdownTimer > 0) {
@@ -206,7 +255,7 @@
                 return () => clearInterval(interval);
             }, [isWorkoutActive, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
 
-            // Temporizador de la ejecución del ejercicio con alertas de voz en los últimos 3 segundos
+            // Temporizador de ejercicio con voz en los últimos 3 segundos
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && !isCountdownActive && stepTimer > 0) {
@@ -290,7 +339,7 @@
                         <h1 className="text-3xl md:text-4xl font-black text-white tracking-wider mt-1 drop-shadow-md">
                             WORKOUT SESSION
                         </h1>
-                        <p className="text-xs text-indigo-100 mt-1">High-Intensity Guided Session</p>
+                        <p className="text-xs text-indigo-100 mt-1">High-Intensity Guided Session (Auto-Scanned Library)</p>
                     </div>
 
                     {!isWorkoutActive && !isCompleted && (
@@ -311,7 +360,7 @@
                                         setSelectedDayIndex(Number(e.target.value));
                                     }}
                                     className="bg-gray-900 text-white border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
-                                    <option value={1}>Monday (Push + Shoulders)</option>
+                                    <option value={1}>Monday (Push + Core)</option>
                                     <option value={3}>Wednesday (Pull + Legs)</option>
                                     <option value={5}>Friday (Dynamic Fullbody)</option>
                                     <option value={6}>Saturday (Express Burnout)</option>
@@ -404,7 +453,7 @@
                                     )}
 
                                     <h2 className="text-2xl font-bold text-white mb-1">{activeExercise.name}</h2>
-                                    <p className="text-xs text-gray-400 mb-1">Target Zone: <strong className="text-blue-400">{activeExercise.muscle}</strong></p>
+                                    <p className="text-xs text-gray-400 mb-1">Target Zone: <strong className="text-blue-400">{activeExercise.muscle}</strong> ({activeExercise.filename})</p>
                                     <p className="text-sm text-gray-300 mb-4">Instruction: <strong className="text-yellow-400">{activeExercise.value}</strong></p>
 
                                     <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 inline-block w-full max-w-xs mb-4">
@@ -426,8 +475,8 @@
                         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                 <div>
-                                    <h3 className="text-lg font-bold">Scheduled Sequence</h3>
-                                    <span className="text-xs text-gray-400 block">Total Duration: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> (Random track selected upon start)</span>
+                                    <h3 className="text-lg font-bold">Scheduled Sequence (Auto-Generated)</h3>
+                                    <span className="text-xs text-gray-400 block">Total Duration: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong> ({EXERCISES_DATABASE.length} total videos loaded)</span>
                                 </div>
                                 {DAYS_MAP[selectedDayIndex] && (
                                     <button 
