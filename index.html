@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.7";
+        const APP_VERSION = "v1.8";
 
         const EXERCISES_DATABASE = [
             { id: 1, name: "Floor Press", muscle: "Chest", filename: "manc_pecho_01.mp4" },
@@ -140,14 +140,21 @@
                     return;
                 }
 
-                const pool = EXERCISES_DATABASE.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
-                const shuffled = [...pool].sort(() => 0.5 - Math.random());
-                if (shuffled.length < 4) return;
+                // Barajamos todo el repertorio general para maximizar la variedad global e incluir sorpresas de otros grupos
+                const pool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
+                
+                // Priorizamos los del día pero rellenamos con cualquiera si hace falta para garantizar opciones frescas
+                const preferredPool = pool.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
+                const otherPool = pool.filter(ex => !dayConfig.primaryMuscles.includes(ex.muscle));
+                const combinedPool = [...preferredPool, ...otherPool];
 
-                const stdEx1 = shuffled[0];
-                const stdEx2 = shuffled[1];
-                const singleEx = shuffled[2];
-                const miniSetGroup = shuffled.slice(0, 4);
+                if (combinedPool.length < 6) return;
+
+                const stdEx1 = combinedPool[0];
+                const stdEx2 = combinedPool[1];
+                const singleEx = combinedPool[2];
+                const burnoutEx = combinedPool[3];
+                const miniSetGroup = combinedPool.slice(4, 8); // 4 ejercicios únicos para los minisets
 
                 const exactSequence = [
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
@@ -170,7 +177,7 @@
                         speechText: "Mini Sets!" 
                     },
                     { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 60, value: "Last breather", isRest: true },
-                    { ...shuffled[3], mode: "Final Burnout", duration: 50, value: "Give everything you have left!", isRest: false }
+                    { ...burnoutEx, mode: "Final Burnout", duration: 50, value: "Give everything you have left!", isRest: false }
                 ];
 
                 setCurrentWorkout(exactSequence);
@@ -219,7 +226,6 @@
                         setIsCompleted(true);
                         if (audioRef.current) audioRef.current.pause();
                         
-                        // Seleccionar una frase motivadora aleatoria al terminar
                         const randomQuote = MILITARY_QUOTES[Math.floor(Math.random() * MILITARY_QUOTES.length)];
                         setSelectedQuote(randomQuote);
                     }
@@ -310,13 +316,11 @@
                     )}
 
                     {isCompleted ? (
-                        /* PANTALLA DE FINALIZACIÓN CON FRASE MOTIVADORA Y ESTILO REQUERIDO */
                         <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 rounded-2xl border-2 border-amber-500 shadow-2xl text-center animate-fadeIn">
                             <div className="mb-4">
                                 <span className="text-6xl">🎖️</span>
                             </div>
                             
-                            {/* Título en grande y resaltado requerido */}
                             <h2 className="text-3xl md:text-4xl font-black text-amber-400 tracking-wide uppercase drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)] mb-6">
                                 ¡¡¡Máximo Esfuerzo Escuela JeongSin!!!
                             </h2>
