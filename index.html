@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.8";
+        const APP_VERSION = "v1.10";
 
         const EXERCISES_DATABASE = [
             { id: 1, name: "Floor Press", muscle: "Chest", filename: "manc_pecho_01.mp4" },
@@ -140,10 +140,7 @@
                     return;
                 }
 
-                // Barajamos todo el repertorio general para maximizar la variedad global e incluir sorpresas de otros grupos
                 const pool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
-                
-                // Priorizamos los del día pero rellenamos con cualquiera si hace falta para garantizar opciones frescas
                 const preferredPool = pool.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
                 const otherPool = pool.filter(ex => !dayConfig.primaryMuscles.includes(ex.muscle));
                 const combinedPool = [...preferredPool, ...otherPool];
@@ -154,7 +151,7 @@
                 const stdEx2 = combinedPool[1];
                 const singleEx = combinedPool[2];
                 const burnoutEx = combinedPool[3];
-                const miniSetGroup = combinedPool.slice(4, 8); // 4 ejercicios únicos para los minisets
+                const miniSetGroup = combinedPool.slice(4, 8);
 
                 const exactSequence = [
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
@@ -189,6 +186,7 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
+            // Temporizador de cuenta atrás inicial (5s)
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && isCountdownActive && countdownTimer > 0) {
@@ -208,11 +206,18 @@
                 return () => clearInterval(interval);
             }, [isWorkoutActive, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
 
+            // Temporizador de la ejecución del ejercicio con alertas de voz en los últimos 3 segundos
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && !isCountdownActive && stepTimer > 0) {
                     interval = setInterval(() => {
-                        setStepTimer(prev => prev - 1);
+                        setStepTimer(prev => {
+                            const nextVal = prev - 1;
+                            if (nextVal === 3 || nextVal === 2 || nextVal === 1) {
+                                speakMotivational(String(nextVal));
+                            }
+                            return nextVal;
+                        });
                         setTotalSessionTime(prev => (prev > 0 ? prev - 1 : 0));
                     }, 1000);
                 } else if (isWorkoutActive && !isCountdownActive && stepTimer === 0) {
@@ -231,7 +236,7 @@
                     }
                 }
                 return () => clearInterval(interval);
-            }, [isWorkoutActive, !isCountdownActive, stepTimer, currentStepIndex, currentWorkout]);
+            }, [isWorkoutActive, isCountdownActive, stepTimer, currentStepIndex, currentWorkout]);
 
             const startWorkout = () => {
                 if (currentWorkout.length === 0) return;
