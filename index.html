@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.13";
+        const APP_VERSION = "v1.14";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -24,7 +24,7 @@
             "body_pierna_01.mp4", "body_pierna_02.mp4", "body_pierna_03.mp4", "body_pierna_04.mp4",
             "manc_abdominal_01.mp4", "manc_abdominal_02.mp4", "manc_abdominal_03.mp4", "manc_abdominal_04.mp4",
             "manc_biceps_01.mp4", "manc_biceps_02.mp4", "manc_biceps_03.mp4", "manc_biceps_04.mp4",
-            "manc_culo_01.mp4", "manc_culo_02.mp4",
+            "manc_gluteo_01.mp4", "manc_gluteo_02.mp4",
             "manc_espalda_01.mp4", "manc_espalda_02.mp4", "manc_espalda_03.mp4",
             "manc_hombro_01.mp4", "manc_hombro_02.mp4",
             "manc_lateral_01.mp4", "manc_lateral_02.mp4",
@@ -37,10 +37,13 @@
             return RAW_VIDEOS_LIST.map((filename, index) => {
                 const parts = filename.replace('.mp4', '').split('_');
                 const toolType = parts[0] === 'body' ? 'Bodyweight' : 'Dumbbell';
-                const rawMuscle = parts[1] || 'General';
+                let rawMuscle = parts[1] || 'General';
                 
+                // Normalización estricta (por seguridad, si quedaba algo antiguo de culo, se mapea a gluteo)
+                if (rawMuscle === 'culo') rawMuscle = 'gluteo';
+
                 let mappedMuscle = rawMuscle.charAt(0).toUpperCase() + rawMuscle.slice(1);
-                if (rawMuscle === 'culo' || rawMuscle === 'gluteo') mappedMuscle = 'Legs';
+                if (rawMuscle === 'gluteo') mappedMuscle = 'Legs';
                 if (rawMuscle === 'abdominal') mappedMuscle = 'Core';
                 if (rawMuscle === 'cuello' || rawMuscle === 'lateral') mappedMuscle = 'Fullbody';
 
@@ -161,7 +164,6 @@
                 }
             };
 
-            // GENERADOR DINÁMICO: AISLAMIENTO TOTAL DE EJERCICIOS (CERO REPETICIONES EN TODA LA SESIÓN, INCLUYENDO MINI-SETS)
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -191,7 +193,6 @@
                 const singleEx = getUniqueExercise(masterList);
                 const burnoutEx = getUniqueExercise(masterList);
 
-                // Los 4 mini-sets seleccionan estrictamente ejercicios que NO hayan salido antes en la sesión
                 const miniSetGroup = [];
                 for (let i = 0; i < 4; i++) {
                     miniSetGroup.push(getUniqueExercise(masterList));
@@ -230,7 +231,6 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Cuenta atrás inicial (5s)
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && isCountdownActive && countdownTimer > 0) {
@@ -250,7 +250,6 @@
                 return () => clearInterval(interval);
             }, [isWorkoutActive, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
 
-            // Temporizador de ejercicio con voz en los últimos 3 segundos
             React.useEffect(() => {
                 let interval = null;
                 if (isWorkoutActive && !isCountdownActive && stepTimer > 0) {
