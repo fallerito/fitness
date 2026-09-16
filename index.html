@@ -13,9 +13,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.12";
+        const APP_VERSION = "v1.13";
 
-        // LISTA EXACTA DE VÍDEOS DE LA CARPETA (Autogenerada dinámicamente)
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
             "body_cuello_01.mp4",
@@ -34,22 +33,17 @@
             "manc_triceps_01.mp4", "manc_triceps_02.mp4", "manc_triceps_03.mp4", "manc_triceps_04.mp4"
         ];
 
-        // FUNCIÓN INTELIGENTE: Convierte los nombres de archivo en una base de datos estructurada automáticamente
         const generateDatabaseFromFiles = () => {
             return RAW_VIDEOS_LIST.map((filename, index) => {
                 const parts = filename.replace('.mp4', '').split('_');
-                // parts[0] = tipo (body o manc)
-                // parts[1] = grupo muscular (abdominal, cuello, gluteo, lateral, pecho, pierna, biceps, culo, espalda, hombro, triceps)
                 const toolType = parts[0] === 'body' ? 'Bodyweight' : 'Dumbbell';
                 const rawMuscle = parts[1] || 'General';
                 
-                // Normalizar nombres de músculos para mapearlos con los días de entrenamiento
                 let mappedMuscle = rawMuscle.charAt(0).toUpperCase() + rawMuscle.slice(1);
                 if (rawMuscle === 'culo' || rawMuscle === 'gluteo') mappedMuscle = 'Legs';
                 if (rawMuscle === 'abdominal') mappedMuscle = 'Core';
                 if (rawMuscle === 'cuello' || rawMuscle === 'lateral') mappedMuscle = 'Fullbody';
 
-                // Dar un nombre legible al ejercicio basado en su archivo
                 const formattedName = `${toolType} ${rawMuscle.toUpperCase()} #${parts[2] || '1'}`;
 
                 return {
@@ -167,7 +161,7 @@
                 }
             };
 
-            // GENERADOR DINÁMICO CON CONTROL ANTI-REPETICIÓN ABSOLUTO
+            // GENERADOR DINÁMICO: AISLAMIENTO TOTAL DE EJERCICIOS (CERO REPETICIONES EN TODA LA SESIÓN, INCLUYENDO MINI-SETS)
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -197,6 +191,7 @@
                 const singleEx = getUniqueExercise(masterList);
                 const burnoutEx = getUniqueExercise(masterList);
 
+                // Los 4 mini-sets seleccionan estrictamente ejercicios que NO hayan salido antes en la sesión
                 const miniSetGroup = [];
                 for (let i = 0; i < 4; i++) {
                     miniSetGroup.push(getUniqueExercise(masterList));
