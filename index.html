@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.14";
+        const APP_VERSION = "v1.15";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -39,7 +39,6 @@
                 const toolType = parts[0] === 'body' ? 'Bodyweight' : 'Dumbbell';
                 let rawMuscle = parts[1] || 'General';
                 
-                // Normalización estricta (por seguridad, si quedaba algo antiguo de culo, se mapea a gluteo)
                 if (rawMuscle === 'culo') rawMuscle = 'gluteo';
 
                 let mappedMuscle = rawMuscle.charAt(0).toUpperCase() + rawMuscle.slice(1);
@@ -164,6 +163,7 @@
                 }
             };
 
+            // GENERADOR DINÁMICO: GARANTIZA MÍNIMO 3-4 GRUPOS MUSCULARES DIFERENTES Y AISLAMIENTO TOTAL
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -173,29 +173,34 @@
                 }
 
                 const shuffledPool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
-                const preferred = shuffledPool.filter(ex => dayConfig.primaryMuscles.includes(ex.muscle));
-                const others = shuffledPool.filter(ex => !dayConfig.primaryMuscles.includes(ex.muscle));
-                const masterList = [...preferred, ...others];
-
                 const usedIds = new Set();
-                const getUniqueExercise = (fallbackList) => {
-                    for (let ex of fallbackList) {
-                        if (!usedIds.has(ex.id)) {
-                            usedIds.add(ex.id);
-                            return ex;
+                const usedMuscles = new Set();
+
+                const getDiverseExercise = (mustBeNewMuscle = false) => {
+                    let pool = shuffledPool.filter(ex => !usedIds.has(ex.id));
+                    if (mustBeNewMuscle) {
+                        const nonRepeatedMusclePool = pool.filter(ex => !usedMuscles.has(ex.muscle));
+                        if (nonRepeatedMusclePool.length > 0) {
+                            pool = nonRepeatedMusclePool;
                         }
                     }
-                    return fallbackList[Math.floor(Math.random() * fallbackList.length)];
+                    if (pool.length === 0) pool = shuffledPool.filter(ex => !usedIds.has(ex.id));
+                    if (pool.length === 0) pool = shuffledPool;
+
+                    const chosen = pool[Math.floor(Math.random() * pool.length)];
+                    usedIds.add(chosen.id);
+                    usedMuscles.add(chosen.muscle);
+                    return chosen;
                 };
 
-                const stdEx1 = getUniqueExercise(masterList);
-                const stdEx2 = getUniqueExercise(masterList);
-                const singleEx = getUniqueExercise(masterList);
-                const burnoutEx = getUniqueExercise(masterList);
+                const stdEx1 = getDiverseExercise(false);
+                const stdEx2 = getDiverseExercise(true); // Fuerza otro grupo muscular
+                const singleEx = getDiverseExercise(true); // Fuerza otro grupo muscular distinto
+                const burnoutEx = getDiverseExercise(true); // Fuerza otro grupo muscular distinto
 
                 const miniSetGroup = [];
                 for (let i = 0; i < 4; i++) {
-                    miniSetGroup.push(getUniqueExercise(masterList));
+                    miniSetGroup.push(getDiverseExercise(false));
                 }
 
                 const exactSequence = [
