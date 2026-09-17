@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.17";
+        const APP_VERSION = "v1.19";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -155,12 +155,14 @@
             const speakText = (text) => {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'en-US';
-                    utterance.rate = 1.1;
-                    utterance.pitch = 1.2;
-                    utterance.volume = 1.0;
-                    window.speechSynthesis.speak(utterance);
+                    setTimeout(() => {
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'en-US';
+                        utterance.rate = 1.2;
+                        utterance.pitch = 1.1;
+                        utterance.volume = 1.0;
+                        window.speechSynthesis.speak(utterance);
+                    }, 50);
                 }
             };
 
@@ -236,20 +238,22 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // CONTROL DE MÚSICA REAL: Se pausa durante los ejercicios y suena en descansos/cuentas atrás
+            // CONTROL DE MÚSICA FINO: Suena en preparación, suena durante el ejercicio, y se pausa solo en los últimos 3s
             React.useEffect(() => {
-                if (audioRef.current) {
-                    if (isWorkoutActive) {
-                        if (isCountdownActive || currentWorkout[currentStepIndex]?.isRest) {
-                            audioRef.current.play().catch(e => console.log(e));
-                        } else {
-                            audioRef.current.pause(); // Silencio total de música durante el ejercicio
-                        }
+                if (audioRef.current && isWorkoutActive) {
+                    if (isCountdownActive) {
+                        audioRef.current.play().catch(e => console.log(e)); // Suena en los 5s iniciales
                     } else {
-                        audioRef.current.pause();
+                        if (stepTimer > 3) {
+                            audioRef.current.play().catch(e => console.log(e)); // Suena durante el ejercicio normal
+                        } else {
+                            audioRef.current.pause(); // Se pausa en los últimos 3 segundos (3, 2, 1) para la voz
+                        }
                     }
+                } else if (!isWorkoutActive && audioRef.current) {
+                    audioRef.current.pause();
                 }
-            }, [isWorkoutActive, isCountdownActive, currentStepIndex, currentWorkout]);
+            }, [isWorkoutActive, isCountdownActive, stepTimer]);
 
             React.useEffect(() => {
                 let interval = null;
@@ -418,7 +422,7 @@
                             {isCountdownActive ? (
                                 <div className="py-10">
                                     <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                                        Playing track: {currentTrack}
+                                        Playing track: {currentTrack} (Prep)
                                     </span>
                                     <div className="w-48 h-48 mx-auto my-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center shadow-2xl border-4 border-amber-300 animate-pulse">
                                         <span className="text-6xl font-black text-white font-mono">{countdownTimer}</span>
@@ -437,7 +441,7 @@
                                             ⏱️ Remaining: {formatMinutes(totalSessionTime)}
                                         </span>
                                         <span className="text-xs px-3 py-1 rounded-full font-bold bg-yellow-900/60 text-yellow-300 border border-yellow-500/30">
-                                            🎵 {currentTrack}
+                                            🎵 {currentTrack} {stepTimer <= 3 ? "(Paused for Voice)" : ""}
                                         </span>
                                     </div>
 
