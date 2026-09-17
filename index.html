@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.16";
+        const APP_VERSION = "v1.17";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -152,13 +152,14 @@
 
             const audioRef = React.useRef(null);
 
-            const speakMotivational = (text) => {
+            const speakText = (text) => {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = 'en-US';
-                    utterance.rate = 1.0;
-                    utterance.pitch = 1.1;
+                    utterance.rate = 1.1;
+                    utterance.pitch = 1.2;
+                    utterance.volume = 1.0;
                     window.speechSynthesis.speak(utterance);
                 }
             };
@@ -235,15 +236,17 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // Control de la música: Se silencia durante el ejercicio principal para dejar paso a la voz, y suena en los descansos/cuenta atrás
+            // CONTROL DE MÚSICA REAL: Se pausa durante los ejercicios y suena en descansos/cuentas atrás
             React.useEffect(() => {
                 if (audioRef.current) {
                     if (isWorkoutActive) {
                         if (isCountdownActive || currentWorkout[currentStepIndex]?.isRest) {
-                            audioRef.current.volume = 0.7; // Música alta en descansos o cuenta atrás
+                            audioRef.current.play().catch(e => console.log(e));
                         } else {
-                            audioRef.current.volume = 0.05; // Música casi silenciada durante el ejercicio para oír los 3s de voz claramente
+                            audioRef.current.pause(); // Silencio total de música durante el ejercicio
                         }
+                    } else {
+                        audioRef.current.pause();
                     }
                 }
             }, [isWorkoutActive, isCountdownActive, currentStepIndex, currentWorkout]);
@@ -261,7 +264,7 @@
                     setStepTimer(currentItem.duration);
 
                     if (currentItem.speechText) {
-                        speakMotivational(currentItem.speechText);
+                        speakText(currentItem.speechText);
                     }
                 }
                 return () => clearInterval(interval);
@@ -274,7 +277,7 @@
                         setStepTimer(prev => {
                             const nextVal = prev - 1;
                             if (nextVal === 3 || nextVal === 2 || nextVal === 1) {
-                                speakMotivational(String(nextVal));
+                                speakText(String(nextVal));
                             }
                             return nextVal;
                         });
