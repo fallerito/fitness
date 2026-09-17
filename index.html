@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.15";
+        const APP_VERSION = "v1.16";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -163,7 +163,6 @@
                 }
             };
 
-            // GENERADOR DINÁMICO: GARANTIZA MÍNIMO 3-4 GRUPOS MUSCULARES DIFERENTES Y AISLAMIENTO TOTAL
             const generateWorkoutForDay = (dayIdx) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
@@ -194,9 +193,9 @@
                 };
 
                 const stdEx1 = getDiverseExercise(false);
-                const stdEx2 = getDiverseExercise(true); // Fuerza otro grupo muscular
-                const singleEx = getDiverseExercise(true); // Fuerza otro grupo muscular distinto
-                const burnoutEx = getDiverseExercise(true); // Fuerza otro grupo muscular distinto
+                const stdEx2 = getDiverseExercise(true);
+                const singleEx = getDiverseExercise(true);
+                const burnoutEx = getDiverseExercise(true);
 
                 const miniSetGroup = [];
                 for (let i = 0; i < 4; i++) {
@@ -235,6 +234,19 @@
             React.useEffect(() => {
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
+
+            // Control de la música: Se silencia durante el ejercicio principal para dejar paso a la voz, y suena en los descansos/cuenta atrás
+            React.useEffect(() => {
+                if (audioRef.current) {
+                    if (isWorkoutActive) {
+                        if (isCountdownActive || currentWorkout[currentStepIndex]?.isRest) {
+                            audioRef.current.volume = 0.7; // Música alta en descansos o cuenta atrás
+                        } else {
+                            audioRef.current.volume = 0.05; // Música casi silenciada durante el ejercicio para oír los 3s de voz claramente
+                        }
+                    }
+                }
+            }, [isWorkoutActive, isCountdownActive, currentStepIndex, currentWorkout]);
 
             React.useEffect(() => {
                 let interval = null;
