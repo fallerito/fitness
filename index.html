@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.24";
+        const APP_VERSION = "v1.26";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -213,6 +213,7 @@
 
                 const stdEx1 = getDiverseExercise(false);
                 const stdEx2 = getDiverseExercise(true);
+                const stdEx3 = getDiverseExercise(true); // Ejercicio estándar adicional
                 const singleEx = getDiverseExercise(true);
                 const burnoutEx = getDiverseExercise(true);
 
@@ -221,12 +222,16 @@
                     miniSetGroup.push(getDiverseExercise(false));
                 }
 
+                // Volvemos los ejercicios a 60 segundos, pero añadimos más variedad con 3 bloques estándar en vez de 2 y descansos equilibrados
                 const exactSequence = [
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
                     { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
+                    { ...stdEx3, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
-                    { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
                     { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Catch your breath", isRest: true },
+                    { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
+                    { ...stdEx3, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
+                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Lower heart rate", isRest: true },
                     { ...singleEx, mode: "Max Single Set", duration: 60, value: "Muscle failure", isRest: false },
                     { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Lower heart rate", isRest: true },
                     { 
@@ -242,7 +247,7 @@
                         speechText: "Mini Sets!" 
                     },
                     { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Last breather", isRest: true },
-                    { ...burnoutEx, mode: "Final Burnout", duration: 50, value: "Give everything you have left!", isRest: false }
+                    { ...burnoutEx, mode: "Final Burnout", duration: 60, value: "Give everything you have left!", isRest: false }
                 ];
 
                 setCurrentWorkout(exactSequence);
