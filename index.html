@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.40";
+        const APP_VERSION = "v1.41";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -36,21 +36,42 @@
         const FIGHTERS_CONFIG = {
             "Flat": {
                 name: "Flat",
-                avatarImg: "avatares/flat.jpeg",
+                avatarImg: "avatares/flat.jpg",
                 bgColor: "from-sky-600 to-blue-900",
                 borderColor: "border-sky-400"
             },
             "Random": {
                 name: "Random",
-                avatarImg: "avatares/random.jpeg",
+                avatarImg: "avatares/random.jpg",
                 bgColor: "from-purple-600 to-indigo-900",
                 borderColor: "border-purple-400"
             },
             "Invitado": {
                 name: "Invitado",
-                avatarImg: "avatares/invitado.jpeg",
+                avatarImg: "avatares/invitado.jpg",
                 bgColor: "from-amber-600 to-orange-900",
                 borderColor: "border-amber-400"
+            }
+        };
+
+        const DIFFICULTIES_CONFIG = {
+            "Guerrero": {
+                name: "Guerrero",
+                img: "avatares/guerrero.jpg",
+                points: 1,
+                desc: "Estándar"
+            },
+            "Asesino": {
+                name: "Asesino",
+                img: "avatares/asesino.jpg",
+                points: 2,
+                desc: "5s rest, +2 ej"
+            },
+            "Bestia": {
+                name: "Bestia",
+                img: "avatares/bestia.jpg",
+                points: 4,
+                desc: "3s rest, +4 ej"
             }
         };
 
@@ -149,7 +170,7 @@
 
         function App() {
             const [selectedFighter, setSelectedFighter] = React.useState("Flat");
-            const [difficultyMode, setDifficultyMode] = React.useState("Guerrero"); // Guerrero, Asesino, Bestia
+            const [difficultyMode, setDifficultyMode] = React.useState("Guerrero");
             
             const [userStats, setUserStats] = React.useState(() => {
                 const saved = localStorage.getItem('jeongsin_user_stats');
@@ -187,10 +208,7 @@
             };
 
             const recordSessionCompletion = () => {
-                let pointsToAdd = 1;
-                if (difficultyMode === "Asesino") pointsToAdd = 2;
-                if (difficultyMode === "Bestia") pointsToAdd = 4;
-
+                const pointsToAdd = DIFFICULTIES_CONFIG[difficultyMode]?.points || 1;
                 const updated = {
                     ...userStats,
                     [selectedFighter]: (userStats[selectedFighter] || 0) + pointsToAdd
@@ -233,7 +251,6 @@
                     return;
                 }
 
-                // Configuración según modo de dificultad
                 let restDuration = 15;
                 let miniSetReps = 8;
                 let extraExercisesCount = 0;
@@ -245,7 +262,7 @@
                 } else if (mode === "Bestia") {
                     restDuration = 3;
                     miniSetReps = 15;
-                    extraExercisesCount = 4; // +2 respecto a Asesino (total +4)
+                    extraExercisesCount = 4;
                 }
 
                 const shuffledPool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
@@ -276,7 +293,6 @@
                 const miniSetGroup = [];
                 for (let i = 0; i < 4; i++) miniSetGroup.push(getDiverseExercise(false));
 
-                // Bloque base (Guerrero)
                 let exactSequence = [
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
                     { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
@@ -303,10 +319,8 @@
                     { ...burnoutEx, mode: "Final Burnout", duration: 60, value: "Give everything you have left!", isRest: false }
                 ];
 
-                // Inyectar ejercicios extra según dificultad
                 if (extraExercisesCount > 0) {
                     const extra1 = getDiverseExercise(true);
-                    // Insertar antes del burnout final
                     exactSequence.splice(exactSequence.length - 1, 0, 
                         { ...extra1, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
                         { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
@@ -470,24 +484,25 @@
                                 </div>
                             </div>
 
-                            {/* Selector de Modo de Dificultad */}
+                            {/* Selector de Modo de Dificultad con imágenes */}
                             <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 shadow-md">
                                 <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block mb-2">Select Difficulty Mode</span>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { id: "Guerrero", label: "Guerrero (+1 pt)", desc: "Estándar" },
-                                        { id: "Asesino", label: "Asesino (+2 pts)", desc: "5s rest, +2 ej" },
-                                        { id: "Bestia", label: "Bestia (+4 pts)", desc: "3s rest, +4 ej" }
-                                    ].map((mode) => (
-                                        <button
-                                            key={mode.id}
-                                            onClick={() => setDifficultyMode(mode.id)}
-                                            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition ${difficultyMode === mode.id ? 'bg-amber-600 border-amber-400 text-white shadow-lg ring-2 ring-white/30 scale-105' : 'bg-gray-900 border-gray-700 text-gray-300 hover:border-gray-500'}`}
-                                        >
-                                            <span className="font-bold text-xs">{mode.label}</span>
-                                            <span className="text-[9px] text-gray-200 mt-0.5">{mode.desc}</span>
-                                        </button>
-                                    ))}
+                                    {Object.keys(DIFFICULTIES_CONFIG).map((modeKey) => {
+                                        const mode = DIFFICULTIES_CONFIG[modeKey];
+                                        const isSelected = difficultyMode === modeKey;
+                                        return (
+                                            <button
+                                                key={modeKey}
+                                                onClick={() => setDifficultyMode(modeKey)}
+                                                className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition gap-1 ${isSelected ? 'bg-amber-600/90 border-amber-400 ring-2 ring-white/50 shadow-lg scale-105' : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}
+                                            >
+                                                <img src={mode.img} alt={mode.name} className="w-10 h-10 object-cover rounded-full border border-white/20 shadow" />
+                                                <span className="font-bold text-xs text-white">{mode.name} (+{mode.points})</span>
+                                                <span className="text-[9px] text-gray-300">{mode.desc}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
