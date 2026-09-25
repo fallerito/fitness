@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.32";
+        const APP_VERSION = "v1.40";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -36,19 +36,19 @@
         const FIGHTERS_CONFIG = {
             "Flat": {
                 name: "Flat",
-                avatarImg: "avatares/flat.jpg",
+                avatarImg: "avatares/flat.jpeg",
                 bgColor: "from-sky-600 to-blue-900",
                 borderColor: "border-sky-400"
             },
             "Random": {
                 name: "Random",
-                avatarImg: "avatares/random.jpg",
+                avatarImg: "avatares/random.jpeg",
                 bgColor: "from-purple-600 to-indigo-900",
                 borderColor: "border-purple-400"
             },
             "Invitado": {
                 name: "Invitado",
-                avatarImg: "avatares/invitado.jpg",
+                avatarImg: "avatares/invitado.jpeg",
                 bgColor: "from-amber-600 to-orange-900",
                 borderColor: "border-amber-400"
             }
@@ -149,6 +149,8 @@
 
         function App() {
             const [selectedFighter, setSelectedFighter] = React.useState("Flat");
+            const [difficultyMode, setDifficultyMode] = React.useState("Guerrero"); // Guerrero, Asesino, Bestia
+            
             const [userStats, setUserStats] = React.useState(() => {
                 const saved = localStorage.getItem('jeongsin_user_stats');
                 if (saved) {
@@ -185,9 +187,13 @@
             };
 
             const recordSessionCompletion = () => {
+                let pointsToAdd = 1;
+                if (difficultyMode === "Asesino") pointsToAdd = 2;
+                if (difficultyMode === "Bestia") pointsToAdd = 4;
+
                 const updated = {
                     ...userStats,
-                    [selectedFighter]: (userStats[selectedFighter] || 0) + 1
+                    [selectedFighter]: (userStats[selectedFighter] || 0) + pointsToAdd
                 };
                 saveStatsToStorage(updated);
             };
@@ -219,12 +225,27 @@
                 }
             };
 
-            const generateWorkoutForDay = (dayIdx) => {
+            const generateWorkoutForDay = (dayIdx, mode) => {
                 const dayConfig = DAYS_MAP[dayIdx];
                 if (!dayConfig) {
                     setCurrentWorkout([]);
                     setTotalSessionTime(0);
                     return;
+                }
+
+                // Configuración según modo de dificultad
+                let restDuration = 15;
+                let miniSetReps = 8;
+                let extraExercisesCount = 0;
+
+                if (mode === "Asesino") {
+                    restDuration = 5;
+                    miniSetReps = 12;
+                    extraExercisesCount = 2;
+                } else if (mode === "Bestia") {
+                    restDuration = 3;
+                    miniSetReps = 15;
+                    extraExercisesCount = 4; // +2 respecto a Asesino (total +4)
                 }
 
                 const shuffledPool = [...EXERCISES_DATABASE].sort(() => 0.5 - Math.random());
@@ -255,17 +276,18 @@
                 const miniSetGroup = [];
                 for (let i = 0; i < 4; i++) miniSetGroup.push(getDiverseExercise(false));
 
-                const exactSequence = [
+                // Bloque base (Guerrero)
+                let exactSequence = [
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
                     { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
                     { ...stdEx3, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
-                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Catch your breath", isRest: true },
+                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Catch your breath", isRest: true },
                     { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
                     { ...stdEx3, mode: "Standard", duration: 60, value: "12 reps (Halfway beep at 30s)", isRest: false },
-                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Lower heart rate", isRest: true },
+                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Lower heart rate", isRest: true },
                     { ...singleEx, mode: "Max Single Set", duration: 60, value: "Muscle failure", isRest: false },
-                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Lower heart rate", isRest: true },
+                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Lower heart rate", isRest: true },
                     { 
                         name: "Simultaneous Mini-Sets", 
                         muscle: "Multi-zone", 
@@ -274,12 +296,29 @@
                         exercises: miniSetGroup,
                         mode: "MiniSets Block", 
                         duration: 180, 
-                        value: "8 reps per exercise", 
+                        value: `${miniSetReps} reps per exercise`, 
                         isRest: false 
                     },
-                    { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Last breather", isRest: true },
+                    { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Last breather", isRest: true },
                     { ...burnoutEx, mode: "Final Burnout", duration: 60, value: "Give everything you have left!", isRest: false }
                 ];
+
+                // Inyectar ejercicios extra según dificultad
+                if (extraExercisesCount > 0) {
+                    const extra1 = getDiverseExercise(true);
+                    // Insertar antes del burnout final
+                    exactSequence.splice(exactSequence.length - 1, 0, 
+                        { ...extra1, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
+                        { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
+                    );
+                }
+                if (extraExercisesCount > 2) {
+                    const extra2 = getDiverseExercise(true);
+                    exactSequence.splice(exactSequence.length - 1, 0, 
+                        { ...extra2, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
+                        { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
+                    );
+                }
 
                 setCurrentWorkout(exactSequence);
                 const totalSecs = exactSequence.reduce((acc, curr) => acc + curr.duration + 5, 0);
@@ -287,8 +326,8 @@
             };
 
             React.useEffect(() => {
-                generateWorkoutForDay(selectedDayIndex);
-            }, [selectedDayIndex]);
+                generateWorkoutForDay(selectedDayIndex, difficultyMode);
+            }, [selectedDayIndex, difficultyMode]);
 
             React.useEffect(() => {
                 if (audioRef.current && isWorkoutActive && !isPaused) {
@@ -375,7 +414,7 @@
                 setIsCountdownActive(false);
                 setIsCompleted(false);
                 if (audioRef.current) audioRef.current.pause();
-                generateWorkoutForDay(selectedDayIndex);
+                generateWorkoutForDay(selectedDayIndex, difficultyMode);
             };
 
             const formatMinutes = (seconds) => {
@@ -424,16 +463,37 @@
                                             >
                                                 <img src={fighter.avatarImg} alt={fighter.name} className="w-10 h-10 object-cover rounded-full border border-white/20 shadow" />
                                                 <span className="font-bold text-xs text-white">{fighter.name}</span>
-                                                <span className="text-[10px] text-gray-300 font-mono">Sessions: {userStats[fighterKey] || 0}</span>
+                                                <span className="text-[10px] text-gray-300 font-mono">Score: {userStats[fighterKey] || 0} pts</span>
                                             </button>
                                         );
                                     })}
                                 </div>
                             </div>
 
+                            {/* Selector de Modo de Dificultad */}
+                            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 shadow-md">
+                                <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block mb-2">Select Difficulty Mode</span>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: "Guerrero", label: "Guerrero (+1 pt)", desc: "Estándar" },
+                                        { id: "Asesino", label: "Asesino (+2 pts)", desc: "5s rest, +2 ej" },
+                                        { id: "Bestia", label: "Bestia (+4 pts)", desc: "3s rest, +4 ej" }
+                                    ].map((mode) => (
+                                        <button
+                                            key={mode.id}
+                                            onClick={() => setDifficultyMode(mode.id)}
+                                            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition ${difficultyMode === mode.id ? 'bg-amber-600 border-amber-400 text-white shadow-lg ring-2 ring-white/30 scale-105' : 'bg-gray-900 border-gray-700 text-gray-300 hover:border-gray-500'}`}
+                                        >
+                                            <span className="font-bold text-xs">{mode.label}</span>
+                                            <span className="text-[9px] text-gray-200 mt-0.5">{mode.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 flex flex-col md:flex-row justify-between items-center gap-3">
                                 <div>
-                                    <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Active Fighter: <strong className="text-amber-400">{selectedFighter}</strong></span>
+                                    <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Active: <strong className="text-amber-400">{selectedFighter}</strong> ({difficultyMode})</span>
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                         📅 {currentDayName} 
                                     </h2>
@@ -455,7 +515,7 @@
                             </div>
 
                             <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4">
-                                <h3 className="text-xs text-amber-400 font-bold uppercase tracking-widest mb-3 text-center">🏆 Escuela JeongSin Ranking Podium</h3>
+                                <h3 className="text-xs text-amber-400 font-bold uppercase tracking-widest mb-3 text-center">🏆 Escuela JeongSin Ranking Podium (Puntuación)</h3>
                                 <div className="grid grid-cols-3 gap-3 text-center">
                                     {sortedRank.map(([name, count], index) => {
                                         const fighter = FIGHTERS_CONFIG[name];
@@ -465,7 +525,7 @@
                                                 <span className="text-lg mb-1">{medals[index]}</span>
                                                 <img src={fighter.avatarImg} alt={name} className="w-10 h-10 object-cover rounded-full border border-white/20 mb-1 shadow" />
                                                 <span className="text-xs font-bold text-white">{name}</span>
-                                                <span className="text-xs text-green-400 font-mono font-bold">{count} sessions</span>
+                                                <span className="text-xs text-green-400 font-mono font-bold">{count} pts</span>
                                             </div>
                                         );
                                     })}
@@ -501,7 +561,7 @@
                             <h2 className="text-3xl md:text-4xl font-black text-amber-400 tracking-wide uppercase drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)] mb-2">
                                 ¡¡¡Máximo Esfuerzo Escuela JeongSin!!!
                             </h2>
-                            <p className="text-sm text-green-400 font-mono font-bold mb-6">¡Sesión registrada para el luchador: {selectedFighter}!</p>
+                            <p className="text-sm text-green-400 font-mono font-bold mb-6">¡Sesión completada en modo <strong className="text-amber-300">{difficultyMode}</strong> para {selectedFighter}!</p>
 
                             <div className="bg-gray-800/80 border border-amber-500/40 p-6 rounded-xl mb-6 shadow-inner text-left max-w-xl mx-auto">
                                 <span className="text-xs font-mono text-amber-300 uppercase tracking-widest block mb-2 font-bold">
@@ -535,7 +595,7 @@
                                         <span className="text-[9px] text-amber-100 font-bold mt-0.5 uppercase">Get Ready</span>
                                     </div>
                                     <h3 className="text-base font-bold text-white">Next: {activeExercise.name}</h3>
-                                    <p className="text-[10px] text-gray-400 mt-0.5">Fighter: <strong className="text-amber-400">{selectedFighter}</strong></p>
+                                    <p className="text-[10px] text-gray-400 mt-0.5">Fighter: <strong className="text-amber-400">{selectedFighter}</strong> ({difficultyMode})</p>
                                 </div>
                             ) : (
                                 <div>
@@ -560,7 +620,9 @@
                                             ))}
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                                 <div className="w-14 h-14 rounded-full bg-purple-600/90 border-4 border-purple-300 flex items-center justify-center shadow-2xl animate-bounce">
-                                                    <span className="text-2xl font-black text-white font-mono">8</span>
+                                                    <span className="text-2xl font-black text-white font-mono">
+                                                        {difficultyMode === "Bestia" ? "15" : difficultyMode === "Asesino" ? "12" : "8"}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -572,7 +634,7 @@
                                         <div className="w-40 h-40 mx-auto rounded-xl bg-blue-900/20 p-1 mb-1.5 border border-blue-500/50 flex flex-col items-center justify-center shadow-inner">
                                             <span className="text-3xl mb-1">🧘‍♂️</span>
                                             <span className="text-blue-300 font-bold text-sm">REST TIME</span>
-                                            <span className="text-[10px] text-blue-200">Catch your breath</span>
+                                            <span className="text-[10px] text-blue-200">{activeExercise.duration}s Recovery</span>
                                         </div>
                                     )}
 
@@ -604,7 +666,7 @@
                         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                                 <div>
-                                    <h3 className="text-base font-bold">Scheduled Sequence ({selectedFighter})</h3>
+                                    <h3 className="text-base font-bold">Scheduled Sequence ({selectedFighter} - {difficultyMode})</h3>
                                     <span className="text-xs text-gray-400 block">Total Duration: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong></span>
                                 </div>
                                 {DAYS_MAP[selectedDayIndex] && (
