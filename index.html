@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.19";
+        const APP_VERSION = "v1.20";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -210,9 +210,9 @@
                     { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
                     { ...stdEx1, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
                     { ...stdEx2, mode: "Standard", duration: 60, value: "12 reps", isRest: false },
-                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 60, value: "Catch your breath", isRest: true },
+                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Catch your breath", isRest: true },
                     { ...singleEx, mode: "Max Single Set", duration: 60, value: "Muscle failure", isRest: false },
-                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 60, value: "Lower heart rate", isRest: true },
+                    { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Lower heart rate", isRest: true },
                     { 
                         name: "Simultaneous Mini-Sets", 
                         muscle: "Multi-zone", 
@@ -225,7 +225,7 @@
                         isRest: false, 
                         speechText: "Mini Sets!" 
                     },
-                    { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 60, value: "Last breather", isRest: true },
+                    { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: 15, value: "Last breather", isRest: true },
                     { ...burnoutEx, mode: "Final Burnout", duration: 50, value: "Give everything you have left!", isRest: false }
                 ];
 
@@ -238,16 +238,15 @@
                 generateWorkoutForDay(selectedDayIndex);
             }, [selectedDayIndex]);
 
-            // CONTROL DE MÚSICA FINO: Suena en preparación, suena durante el ejercicio, y se pausa solo en los últimos 3s
             React.useEffect(() => {
                 if (audioRef.current && isWorkoutActive) {
                     if (isCountdownActive) {
-                        audioRef.current.play().catch(e => console.log(e)); // Suena en los 5s iniciales
+                        audioRef.current.play().catch(e => console.log(e));
                     } else {
                         if (stepTimer > 3) {
-                            audioRef.current.play().catch(e => console.log(e)); // Suena durante el ejercicio normal
+                            audioRef.current.play().catch(e => console.log(e));
                         } else {
-                            audioRef.current.pause(); // Se pausa en los últimos 3 segundos (3, 2, 1) para la voz
+                            audioRef.current.pause();
                         }
                     }
                 } else if (!isWorkoutActive && audioRef.current) {
