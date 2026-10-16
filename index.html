@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.41";
+        const APP_VERSION = "v1.50-Striking";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -75,6 +75,80 @@
             }
         };
 
+        // Programa de 7 semanas para Ap Chagi y Yop Chagi
+        const TKD_PROGRAM = {
+            1: {
+                week: 1,
+                title: "Fase 1: Conciencia de Cámara y Carga",
+                focus: "Ap Chagi / Yop Chagi Base",
+                desc: "Subida máxima de rodilla al pecho y mantenimiento del equilibrio estático.",
+                drills: [
+                    { name: "Cámara Estática Ap Chagi (Rodilla arriba)", reps: "3 series x 30s por pierna", desc: "Eleva la rodilla al pecho al máximo manteniendo el pie en tensión." },
+                    { name: "Cámara Lateral Yop Chagi contra pared", reps: "3 series x 30s por pierna", desc: "Apóyate en la pared, sube la rodilla y rota el talón hacia afuera." }
+                ]
+            },
+            2: {
+                week: 2,
+                title: "Fase 1: Estabilidad y Alineación de Cadera",
+                focus: "Ap Chagi / Yop Chagi Base",
+                desc: "Fortalecimiento de abductores y flexores de cadera para evitar caída de pelvis.",
+                drills: [
+                    { name: "Elevaciones laterales de pierna estricta", reps: "4 series x 15 reps", desc: "Sin inercia, controlando la bajada." },
+                    { name: "Mantenimiento de rodilla alta en isometría", reps: "3 series x 45s", desc: "Sostén la pierna elevada sin ayuda de las manos." }
+                ]
+            },
+            3: {
+                week: 3,
+                title: "Fase 2: Fijación y Bloqueo de Impacto (Lockout)",
+                focus: "Extensión Máxima y Snap",
+                desc: "Trabajar la fijación estática de 3 segundos en el punto exacto de impacto.",
+                drills: [
+                    { name: "Ap Chagi Lento con Bloqueo (3s)", reps: "4 series x 10 reps", desc: "Extiende la pierna con el metatarso y mantén 3s rígido antes de recoger." },
+                    { name: "Yop Chagi Lento con Fijación de Talón", reps: "4 series x 10 reps", desc: "Empuja con el talón, bloquea rodilla y cadera 3s en extensión total." }
+                ]
+            },
+            4: {
+                week: 4,
+                title: "Fase 2: Potencia Explosiva tras Bloqueo",
+                focus: "Transición Cámara -> Impacto -> Recogida",
+                desc: "Mejorar la velocidad de salida y el retorno rápido de la pierna.",
+                drills: [
+                    { name: "Patadas al aire a máxima velocidad", reps: "3 series x 45s continuos", desc: "Alterna Ap Chagi y Yop Chagi buscando chasquido seco." },
+                    { name: "Sostén isométrico al 90% de extensión", reps: "3 series x 30s", desc: "Mantén la pierna casi estirada temblando de tensión." }
+                ]
+            },
+            5: {
+                week: 5,
+                title: "Fase 3: Repeticiones de Alta Resistencia",
+                focus: "Resistencia Muscular y Cadencia",
+                desc: "Series continuas por tiempo para simular combate real sin perder la técnica.",
+                drills: [
+                    { name: "Ap Chagi Continuo por Intervalos", reps: "4 series x 1 min (15s descanso)", desc: "Ritmo constante manteniendo la altura del golpe." },
+                    { name: "Yop Chagi Continuo por Intervalos", reps: "4 series x 1 min (15s descanso)", desc: "Golpeo lateral con empuje de talón constante." }
+                ]
+            },
+            6: {
+                week: 6,
+                title: "Fase 3: Precisión Milimétrica y Control",
+                focus: "Control del Eje Corporal",
+                desc: "Ejecución de patadas manteniendo el tronco perfectamente erguido.",
+                drills: [
+                    { name: "Combinación Ap Chagi + Yop Chagi", reps: "4 series x 45s", desc: "Sin apoyar el pie en el suelo entre ambas patadas." },
+                    { name: "Patada frontal con parada de 5s en impacto", reps: "3 series x 10 reps", desc: "Fijación extrema de la punta del pie." }
+                ]
+            },
+            7: {
+                week: 7,
+                title: "Fase 4: Semana de Oros (Test Final y Máxima Potencia)",
+                focus: "Examen Final de Patadas",
+                desc: "Integración total de cámara, bloqueo de 5 segundos y velocidad explosiva.",
+                drills: [
+                    { name: "Test Supremo Yop Chagi (5s Lockout)", reps: "5 series x 10 reps perfectas", desc: "Cada patada exige 5 segundos exactos de fijación con talón." },
+                    { name: "Circuito Mixto Ap Chagi + Yop Chagi Tabata", reps: "4 rounds (20s trabajo / 10s descanso)", desc: "Máximo número de impactos limpios posibles." }
+                ]
+            }
+        };
+
         const generateDatabaseFromFiles = () => {
             return RAW_VIDEOS_LIST.map((filename, index) => {
                 const parts = filename.replace('.mp4', '').split('_');
@@ -125,16 +199,6 @@
                 en: "Who dares wins.",
                 es: "Quien atreve, vence.",
                 author: "British SAS Motto"
-            },
-            {
-                en: "Pain is weakness leaving the body.",
-                es: "El dolor es la debilidad abandonando el cuerpo.",
-                author: "Military Fitness"
-            },
-            {
-                en: "Never quit. Your mind will quit 100 times before your body ever does.",
-                es: "Nunca te rindais. Tu mente se rendirá 100 veces antes de que lo haga tu cuerpo.",
-                author: "Special Operations"
             }
         ];
 
@@ -172,10 +236,29 @@
             const [selectedFighter, setSelectedFighter] = React.useState("Flat");
             const [difficultyMode, setDifficultyMode] = React.useState("Guerrero");
             
+            // Estado para alternar entre el Workout normal y el Módulo de Patadas
+            const [activeTab, setActiveTab] = React.useState("main"); // "main" o "tkd_program"
+            const [selectedWeek, setSelectedWeek] = React.useState(1);
+
+            // Cloud Sync (JSONBin.io) config
+            const [cloudBinId, setCloudBinId] = React.useState(() => localStorage.getItem('jeongsin_cloud_bin_id') || '');
+            const [cloudApiKey, setCloudApiKey] = React.useState(() => localStorage.getItem('jeongsin_cloud_api_key') || '');
+            const [showCloudModal, setShowCloudModal] = React.useState(false);
+            const [isSyncing, setIsSyncing] = React.useState(false);
+
             const [userStats, setUserStats] = React.useState(() => {
                 const saved = localStorage.getItem('jeongsin_user_stats');
                 if (saved) {
-                    try { return JSON.parse(saved); } catch (e) {}
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (parsed && typeof parsed === 'object') {
+                            return {
+                                Flat: Number(parsed.Flat) || 0,
+                                Random: Number(parsed.Random) || 0,
+                                Invitado: Number(parsed.Invitado) || 0
+                            };
+                        }
+                    } catch (e) {}
                 }
                 return { Flat: 0, Random: 0, Invitado: 0 };
             });
@@ -205,6 +288,72 @@
             const saveStatsToStorage = (newStats) => {
                 setUserStats(newStats);
                 localStorage.setItem('jeongsin_user_stats', JSON.stringify(newStats));
+                if (cloudBinId) {
+                    syncToCloud(newStats, cloudBinId, cloudApiKey);
+                }
+            };
+
+            const syncToCloud = async (statsToSync, binId, apiKey) => {
+                if (!binId) return;
+                try {
+                    setIsSyncing(true);
+                    const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(apiKey ? { 'X-Master-Key': apiKey } : {})
+                        },
+                        body: JSON.stringify({ stats: statsToSync, updatedAt: new Date().toISOString() })
+                    });
+                    if (!response.ok) console.error("Error syncing to cloud");
+                } catch (e) {
+                    console.error("Cloud sync exception:", e);
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const fetchFromCloud = async () => {
+                if (!cloudBinId) return;
+                try {
+                    setIsSyncing(true);
+                    const response = await fetch(`https://api.jsonbin.io/v3/b/${cloudBinId}/latest`, {
+                        headers: {
+                            ...(cloudApiKey ? { 'X-Master-Key': cloudApiKey } : {})
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const remoteStats = data.record?.stats;
+                        if (remoteStats) {
+                            const cleaned = {
+                                Flat: Number(remoteStats.Flat) || 0,
+                                Random: Number(remoteStats.Random) || 0,
+                                Invitado: Number(remoteStats.Invitado) || 0
+                            };
+                            setUserStats(cleaned);
+                            localStorage.setItem('jeongsin_user_stats', JSON.stringify(cleaned));
+                            alert("¡Puntuaciones sincronizadas desde la nube con éxito!");
+                        }
+                    } else {
+                        alert("No se pudo conectar con el Bin ID proporcionado.");
+                    }
+                } catch (e) {
+                    console.error("Fetch cloud exception:", e);
+                    alert("Error al conectar con la nube.");
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const handleSaveCloudConfig = (e) => {
+                e.preventDefault();
+                localStorage.setItem('jeongsin_cloud_bin_id', cloudBinId);
+                localStorage.setItem('jeongsin_cloud_api_key', cloudApiKey);
+                setShowCloudModal(false);
+                if (cloudBinId) {
+                    fetchFromCloud();
+                }
             };
 
             const recordSessionCompletion = () => {
@@ -311,426 +460,4 @@
                         isMiniSet: true,
                         exercises: miniSetGroup,
                         mode: "MiniSets Block", 
-                        duration: 180, 
-                        value: `${miniSetReps} reps per exercise`, 
-                        isRest: false 
-                    },
-                    { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Last breather", isRest: true },
-                    { ...burnoutEx, mode: "Final Burnout", duration: 60, value: "Give everything you have left!", isRest: false }
-                ];
-
-                if (extraExercisesCount > 0) {
-                    const extra1 = getDiverseExercise(true);
-                    exactSequence.splice(exactSequence.length - 1, 0, 
-                        { ...extra1, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
-                        { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
-                    );
-                }
-                if (extraExercisesCount > 2) {
-                    const extra2 = getDiverseExercise(true);
-                    exactSequence.splice(exactSequence.length - 1, 0, 
-                        { ...extra2, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
-                        { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
-                    );
-                }
-
-                setCurrentWorkout(exactSequence);
-                const totalSecs = exactSequence.reduce((acc, curr) => acc + curr.duration + 5, 0);
-                setTotalSessionTime(totalSecs);
-            };
-
-            React.useEffect(() => {
-                generateWorkoutForDay(selectedDayIndex, difficultyMode);
-            }, [selectedDayIndex, difficultyMode]);
-
-            React.useEffect(() => {
-                if (audioRef.current && isWorkoutActive && !isPaused) {
-                    audioRef.current.volume = (isCountdownActive || stepTimer <= 3) ? 0.3 : 0.7;
-                    audioRef.current.play().catch(e => console.log(e));
-                } else if ((!isWorkoutActive || isPaused) && audioRef.current) {
-                    audioRef.current.pause();
-                }
-            }, [isWorkoutActive, isPaused, isCountdownActive, stepTimer]);
-
-            React.useEffect(() => {
-                let interval = null;
-                if (isWorkoutActive && !isPaused && isCountdownActive && countdownTimer > 0) {
-                    interval = setInterval(() => {
-                        setCountdownTimer(prev => prev - 1);
-                        setTotalSessionTime(prev => (prev > 0 ? prev - 1 : 0));
-                    }, 1000);
-                } else if (isWorkoutActive && !isPaused && isCountdownActive && countdownTimer === 0) {
-                    setIsCountdownActive(false);
-                    const currentItem = currentWorkout[currentStepIndex];
-                    setStepTimer(currentItem.duration);
-                }
-                return () => clearInterval(interval);
-            }, [isWorkoutActive, isPaused, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
-
-            React.useEffect(() => {
-                let interval = null;
-                if (isWorkoutActive && !isPaused && !isCountdownActive && stepTimer > 0) {
-                    interval = setInterval(() => {
-                        setStepTimer(prev => {
-                            const nextVal = prev - 1;
-                            if (nextVal === 30 && !currentWorkout[currentStepIndex].isRest && !currentWorkout[currentStepIndex].isMiniSet) {
-                                playBeep(false);
-                            }
-                            if (nextVal === 3 || nextVal === 2 || nextVal === 1) {
-                                playBeep(nextVal === 1);
-                            }
-                            return nextVal;
-                        });
-                        setTotalSessionTime(prev => (prev > 0 ? prev - 1 : 0));
-                    }, 1000);
-                } else if (isWorkoutActive && !isPaused && !isCountdownActive && stepTimer === 0) {
-                    if (currentStepIndex < currentWorkout.length - 1) {
-                        const nextIndex = currentStepIndex + 1;
-                        setCurrentStepIndex(nextIndex);
-                        setCountdownTimer(5);
-                        setIsCountdownActive(true);
-                    } else {
-                        setIsWorkoutActive(false);
-                        setIsCompleted(true);
-                        recordSessionCompletion();
-                        if (audioRef.current) audioRef.current.pause();
-                        setSelectedQuote(MILITARY_QUOTES[Math.floor(Math.random() * MILITARY_QUOTES.length)]);
-                    }
-                }
-                return () => clearInterval(interval);
-            }, [isWorkoutActive, isPaused, isCountdownActive, stepTimer, currentStepIndex, currentWorkout]);
-
-            const startWorkout = () => {
-                if (currentWorkout.length === 0) return;
-                const randomTrackNum = Math.floor(Math.random() * 9) + 1;
-                setCurrentTrack(`pista${randomTrackNum}.mp3`);
-
-                setIsCompleted(false);
-                setIsPaused(false);
-                setCurrentStepIndex(0);
-                setCountdownTimer(5);
-                setIsCountdownActive(true);
-                setIsWorkoutActive(true);
-
-                setTimeout(() => {
-                    if (audioRef.current) {
-                        audioRef.current.load();
-                        audioRef.current.currentTime = 0;
-                        audioRef.current.volume = 0.7;
-                        audioRef.current.play().catch(e => console.log(e));
-                    }
-                }, 100);
-            };
-
-            const stopWorkout = () => {
-                setIsWorkoutActive(false);
-                setIsPaused(false);
-                setIsCountdownActive(false);
-                setIsCompleted(false);
-                if (audioRef.current) audioRef.current.pause();
-                generateWorkoutForDay(selectedDayIndex, difficultyMode);
-            };
-
-            const formatMinutes = (seconds) => {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            };
-
-            const sortedRank = Object.entries(userStats).sort((a, b) => b[1] - a[1]);
-            const firstScore = sortedRank[0]?.[1] || 0;
-            const tiedFighters = sortedRank.filter(([name, score]) => score === firstScore && score > 0);
-            const isTie = tiedFighters.length > 1;
-
-            const activeExercise = currentWorkout[currentStepIndex];
-            const currentDayName = DAYS_MAP[selectedDayIndex]?.name || "Rest Day";
-
-            return (
-                <div className="max-w-3xl mx-auto p-3">
-                    <audio ref={audioRef} src={`musica/${currentTrack}`} loop />
-
-                    <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-2.5 px-4 rounded-xl shadow-md mb-3 flex items-center justify-between border border-blue-400/30">
-                        <div>
-                            <span className="text-[9px] uppercase tracking-widest text-blue-200 font-bold block">Performance Program</span>
-                            <h1 className="text-lg font-black text-white tracking-wide leading-none drop-shadow-sm">
-                                WORKOUT SESSION
-                            </h1>
-                        </div>
-                        <span className="bg-black/30 text-gray-300 text-[9px] font-mono px-2 py-0.5 rounded-full border border-white/10">
-                            {APP_VERSION}
-                        </span>
-                    </div>
-
-                    {!isWorkoutActive && !isCompleted && (
-                        <>
-                            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 shadow-md">
-                                <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block mb-2">Select Fighter Profile</span>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {Object.keys(FIGHTERS_CONFIG).map((fighterKey) => {
-                                        const fighter = FIGHTERS_CONFIG[fighterKey];
-                                        const isSelected = selectedFighter === fighterKey;
-                                        return (
-                                            <button
-                                                key={fighterKey}
-                                                onClick={() => setSelectedFighter(fighterKey)}
-                                                className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition gap-1 ${isSelected ? `bg-gradient-to-b ${fighter.bgColor}${fighter.borderColor} ring-2 ring-white/50 shadow-lg scale-105` : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}
-                                            >
-                                                <img src={fighter.avatarImg} alt={fighter.name} className="w-10 h-10 object-cover rounded-full border border-white/20 shadow" />
-                                                <span className="font-bold text-xs text-white">{fighter.name}</span>
-                                                <span className="text-[10px] text-gray-300 font-mono">Score: {userStats[fighterKey] || 0} pts</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Selector de Modo de Dificultad con imágenes */}
-                            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 shadow-md">
-                                <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block mb-2">Select Difficulty Mode</span>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {Object.keys(DIFFICULTIES_CONFIG).map((modeKey) => {
-                                        const mode = DIFFICULTIES_CONFIG[modeKey];
-                                        const isSelected = difficultyMode === modeKey;
-                                        return (
-                                            <button
-                                                key={modeKey}
-                                                onClick={() => setDifficultyMode(modeKey)}
-                                                className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition gap-1 ${isSelected ? 'bg-amber-600/90 border-amber-400 ring-2 ring-white/50 shadow-lg scale-105' : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}
-                                            >
-                                                <img src={mode.img} alt={mode.name} className="w-10 h-10 object-cover rounded-full border border-white/20 shadow" />
-                                                <span className="font-bold text-xs text-white">{mode.name} (+{mode.points})</span>
-                                                <span className="text-[9px] text-gray-300">{mode.desc}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 flex flex-col md:flex-row justify-between items-center gap-3">
-                                <div>
-                                    <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Active: <strong className="text-amber-400">{selectedFighter}</strong> ({difficultyMode})</span>
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        📅 {currentDayName} 
-                                    </h2>
-                                    <p className="text-xs text-gray-400">{DAYS_MAP[selectedDayIndex]?.title}</p>
-                                </div>
-
-                                <div className="flex flex-col items-end">
-                                    <label className="text-xs text-gray-400 mb-1">Change day manually:</label>
-                                    <select 
-                                        value={selectedDayIndex} 
-                                        onChange={(e) => setSelectedDayIndex(Number(e.target.value))}
-                                        className="bg-gray-900 text-white border border-gray-700 rounded p-1.5 text-xs focus:outline-none focus:border-blue-500">
-                                        <option value={1}>Monday (Push + Core)</option>
-                                        <option value={3}>Wednesday (Pull + Legs)</option>
-                                        <option value={5}>Friday (Dynamic Fullbody)</option>
-                                        <option value={6}>Saturday (Express Burnout)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4">
-                                <h3 className="text-xs text-amber-400 font-bold uppercase tracking-widest mb-3 text-center">🏆 Escuela JeongSin Ranking Podium (Puntuación)</h3>
-                                <div className="grid grid-cols-3 gap-3 text-center">
-                                    {sortedRank.map(([name, count], index) => {
-                                        const fighter = FIGHTERS_CONFIG[name];
-                                        const medals = ["🥇", "🥈", "🥉"];
-                                        return (
-                                            <div key={name} className="bg-gray-900/90 border border-gray-700 p-3 rounded-xl flex flex-col items-center justify-between shadow-inner">
-                                                <span className="text-lg mb-1">{medals[index]}</span>
-                                                <img src={fighter.avatarImg} alt={name} className="w-10 h-10 object-cover rounded-full border border-white/20 mb-1 shadow" />
-                                                <span className="text-xs font-bold text-white">{name}</span>
-                                                <span className="text-xs text-green-400 font-mono font-bold">{count} pts</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {isTie && (
-                                    <div className="mt-4 p-3 bg-red-950/40 border border-red-500/50 rounded-xl text-center relative overflow-hidden">
-                                        <span className="text-[10px] uppercase font-mono tracking-widest text-red-400 font-bold block mb-2">⚡ Clash of Titans (Empate Detectado) ⚡</span>
-                                        <div className="flex items-center justify-center gap-6 py-2">
-                                            {tiedFighters.map(([name], idx) => {
-                                                const fighter = FIGHTERS_CONFIG[name];
-                                                return (
-                                                    <div key={name} className={`flex items-center gap-2 animate-bounce ${idx === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
-                                                        <img src={fighter.avatarImg} alt={name} className="w-11 h-11 object-cover rounded-full border-2 border-red-400 shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-                                                        <span className="text-xs font-black text-white">{name}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <p className="text-[10px] text-gray-300 mt-1">¡Combaten cara a cara por el liderazgo absoluto de la sesión!</p>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    {isCompleted ? (
-                        <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 rounded-2xl border-2 border-amber-500 shadow-2xl text-center animate-fadeIn">
-                            <div className="mb-4">
-                                <span className="text-6xl">🎖️</span>
-                            </div>
-                            
-                            <h2 className="text-3xl md:text-4xl font-black text-amber-400 tracking-wide uppercase drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)] mb-2">
-                                ¡¡¡Máximo Esfuerzo Escuela JeongSin!!!
-                            </h2>
-                            <p className="text-sm text-green-400 font-mono font-bold mb-6">¡Sesión completada en modo <strong className="text-amber-300">{difficultyMode}</strong> para {selectedFighter}!</p>
-
-                            <div className="bg-gray-800/80 border border-amber-500/40 p-6 rounded-xl mb-6 shadow-inner text-left max-w-xl mx-auto">
-                                <span className="text-xs font-mono text-amber-300 uppercase tracking-widest block mb-2 font-bold">
-                                    Special Forces Motivation ({selectedQuote.author})
-                                </span>
-                                <p className="text-base md:text-lg text-gray-100 italic mb-4 font-serif">
-                                    "{selectedQuote.en}"
-                                </p>
-                                <div className="border-t border-gray-700 pt-3">
-                                    <p className="text-sm md:text-base text-blue-300 font-medium">
-                                        "{selectedQuote.es}"
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button 
-                                onClick={() => setIsCompleted(false)}
-                                className="bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg tracking-wide uppercase text-sm">
-                                Volver al Panel Principal
-                            </button>
-                        </div>
-                    ) : isWorkoutActive && activeExercise ? (
-                        <div className="p-3.5 rounded-xl border shadow-2xl text-center bg-gray-800 border-blue-500">
-                            {isCountdownActive ? (
-                                <div className="py-2">
-                                    <span className="text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                        Playing: {currentTrack} (Prep)
-                                    </span>
-                                    <div className="w-32 h-32 mx-auto my-3 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center shadow-2xl border-4 border-amber-300 animate-pulse">
-                                        <span className="text-4xl font-black text-white font-mono">{countdownTimer}</span>
-                                        <span className="text-[9px] text-amber-100 font-bold mt-0.5 uppercase">Get Ready</span>
-                                    </div>
-                                    <h3 className="text-base font-bold text-white">Next: {activeExercise.name}</h3>
-                                    <p className="text-[10px] text-gray-400 mt-0.5">Fighter: <strong className="text-amber-400">{selectedFighter}</strong> ({difficultyMode})</p>
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className="flex justify-between items-center mb-1.5 text-xs">
-                                        <span className="bg-blue-900 text-blue-200 px-2 py-0.5 rounded-full font-bold">
-                                            Step {currentStepIndex + 1}/{currentWorkout.length}
-                                        </span>
-                                        <span className="bg-purple-900 text-purple-200 px-2 py-0.5 rounded-full font-bold">
-                                            ⏱️ Rem: {formatMinutes(totalSessionTime)}
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded-full font-bold bg-yellow-900/60 text-yellow-300 border border-yellow-500/30">
-                                            🎵 {currentTrack}
-                                        </span>
-                                    </div>
-
-                                    {activeExercise.isMiniSet ? (
-                                        <div className="relative w-44 h-44 mx-auto mb-1.5 grid grid-cols-2 gap-1 p-1 bg-gray-900 rounded-xl border border-purple-500/50 shadow-inner">
-                                            {activeExercise.exercises.map((ex, i) => (
-                                                <div key={i} className="w-full h-full rounded-lg overflow-hidden border border-gray-700 bg-black">
-                                                    <ExerciseVideo filename={ex.filename} className="w-full h-full" />
-                                                </div>
-                                            ))}
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                <div className="w-14 h-14 rounded-full bg-purple-600/90 border-4 border-purple-300 flex items-center justify-center shadow-2xl animate-bounce">
-                                                    <span className="text-2xl font-black text-white font-mono">
-                                                        {difficultyMode === "Bestia" ? "15" : difficultyMode === "Asesino" ? "12" : "8"}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : !activeExercise.isRest ? (
-                                        <div className="w-40 h-40 mx-auto rounded-xl bg-gray-900 p-1 mb-1.5 border border-gray-700 flex items-center justify-center shadow-inner overflow-hidden">
-                                            <ExerciseVideo filename={activeExercise.filename} className="w-full h-full" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-40 h-40 mx-auto rounded-xl bg-blue-900/20 p-1 mb-1.5 border border-blue-500/50 flex flex-col items-center justify-center shadow-inner">
-                                            <span className="text-3xl mb-1">🧘‍♂️</span>
-                                            <span className="text-blue-300 font-bold text-sm">REST TIME</span>
-                                            <span className="text-[10px] text-blue-200">{activeExercise.duration}s Recovery</span>
-                                        </div>
-                                    )}
-
-                                    <h2 className="text-base font-bold text-white leading-tight">{activeExercise.name}</h2>
-                                    <p className="text-[10px] text-gray-400 mb-0.5">Zone: <strong className="text-blue-400">{activeExercise.muscle}</strong></p>
-                                    <p className="text-xs text-gray-300 mb-1.5">Instruction: <strong className="text-yellow-400">{activeExercise.value}</strong></p>
-
-                                    <div className="bg-gray-900 py-2 px-3 rounded-lg border border-gray-700 inline-block w-full max-w-xs mb-2">
-                                        <span className="text-[10px] text-gray-400 block mb-0.5">{activeExercise.isRest ? 'Remaining rest:' : 'Remaining time:'}</span>
-                                        <span className={`text-2xl font-mono font-bold ${activeExercise.isRest ? 'text-blue-400' : 'text-green-400'}`}>{stepTimer}s</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex justify-center gap-3">
-                                <button 
-                                    onClick={() => setIsPaused(!isPaused)}
-                                    className={`px-5 py-1.5 rounded-lg font-bold text-xs transition ${isPaused ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}>
-                                    {isPaused ? '▶️ Resume' : '⏸️ Pause'}
-                                </button>
-                                <button 
-                                    onClick={stopWorkout}
-                                    className="bg-red-600/80 hover:bg-red-500 text-white px-5 py-1.5 rounded-lg font-bold text-xs transition">
-                                    Stop Workout
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-                                <div>
-                                    <h3 className="text-base font-bold">Scheduled Sequence ({selectedFighter} - {difficultyMode})</h3>
-                                    <span className="text-xs text-gray-400 block">Total Duration: <strong className="text-green-400">{formatMinutes(totalSessionTime)} min</strong></span>
-                                </div>
-                                {DAYS_MAP[selectedDayIndex] && (
-                                    <button 
-                                        onClick={startWorkout}
-                                        className="bg-green-600 hover:bg-green-500 text-white px-6 py-2.5 rounded-xl font-bold transition flex items-center gap-2 shadow-lg text-sm">
-                                        ▶️ Start Workout Session
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                                {currentWorkout.map((ex, idx) => (
-                                    <div key={idx} className={`p-2.5 rounded-lg border flex justify-between items-center gap-3 ${ex.isRest ? 'bg-blue-950/20 border-blue-900/50' : 'bg-gray-900 border-gray-800'}`}>
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="bg-amber-500/20 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-500/30 font-bold whitespace-nowrap">⏱️ 5s Pre</span>
-                                            
-                                            {ex.isMiniSet ? (
-                                                <div className="w-10 h-10 rounded bg-purple-950 p-1 flex-shrink-0 border border-purple-700 flex items-center justify-center text-purple-300 font-bold text-xs">
-                                                    🔲 x4
-                                                </div>
-                                            ) : !ex.isRest ? (
-                                                <div className="w-10 h-10 rounded bg-gray-800 p-1 flex-shrink-0 border border-gray-700 overflow-hidden">
-                                                    <ExerciseVideo filename={ex.filename} className="w-full h-full" />
-                                                </div>
-                                            ) : (
-                                                <div className="w-10 h-10 rounded bg-blue-900/30 p-1 flex-shrink-0 border border-blue-700/50 flex items-center justify-center text-blue-300 font-bold text-xs">
-                                                    💤
-                                                </div>
-                                            )}
-                                            <div>
-                                                <h4 className="font-bold text-xs">{ex.name}</h4>
-                                                <span className="text-[11px] text-gray-400">{ex.muscle} • {ex.value} • <strong className="text-green-400">{ex.duration}s</strong></span>
-                                            </div>
-                                        </div>
-                                        <span className={`text-[10px] border px-2 py-0.5 rounded font-semibold whitespace-nowrap ${ex.isRest ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-gray-800 text-yellow-400 border-gray-700'}`}>
-                                            {ex.mode}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+                        duration: 180,
