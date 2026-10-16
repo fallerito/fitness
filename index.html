@@ -460,4 +460,468 @@
                         isMiniSet: true,
                         exercises: miniSetGroup,
                         mode: "MiniSets Block", 
-                        duration: 180,
+                        duration: 180, 
+                        value: `${miniSetReps} reps per exercise`, 
+                        isRest: false 
+                    },
+                    { name: "Final Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Last breather", isRest: true },
+                    { ...burnoutEx, mode: "Final Burnout", duration: 60, value: "Give everything you have left!", isRest: false }
+                ];
+
+                if (extraExercisesCount > 0) {
+                    const extra1 = getDiverseExercise(true);
+                    exactSequence.splice(exactSequence.length - 1, 0, 
+                        { ...extra1, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
+                        { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
+                    );
+                }
+                if (extraExercisesCount > 2) {
+                    const extra2 = getDiverseExercise(true);
+                    exactSequence.splice(exactSequence.length - 1, 0, 
+                        { ...extra2, mode: "Extra Intensity", duration: 60, value: "12 reps High Pace", isRest: false },
+                        { name: "Active Rest", muscle: "Pause", filename: "", mode: "Rest", duration: restDuration, value: "Quick breather", isRest: true }
+                    );
+                }
+
+                setCurrentWorkout(exactSequence);
+                const totalSecs = exactSequence.reduce((acc, curr) => acc + curr.duration + 5, 0);
+                setTotalSessionTime(totalSecs);
+            };
+
+            React.useEffect(() => {
+                generateWorkoutForDay(selectedDayIndex, difficultyMode);
+            }, [selectedDayIndex, difficultyMode]);
+
+            React.useEffect(() => {
+                let interval = null;
+                if (isWorkoutActive && !isPaused && isCountdownActive && countdownTimer > 0) {
+                    interval = setInterval(() => {
+                        setCountdownTimer(prev => prev - 1);
+                        setTotalSessionTime(prev => (prev > 0 ? prev - 1 : 0));
+                    }, 1000);
+                } else if (isWorkoutActive && !isPaused && isCountdownActive && countdownTimer === 0) {
+                    setIsCountdownActive(false);
+                    const currentItem = currentWorkout[currentStepIndex];
+                    setStepTimer(currentItem.duration);
+                }
+                return () => clearInterval(interval);
+            }, [isWorkoutActive, isPaused, isCountdownActive, countdownTimer, currentStepIndex, currentWorkout]);
+
+            React.useEffect(() => {
+                let interval = null;
+                if (isWorkoutActive && !isPaused && !isCountdownActive && stepTimer > 0) {
+                    interval = setInterval(() => {
+                        setStepTimer(prev => {
+                            const nextVal = prev - 1;
+                            if (nextVal === 30 && !currentWorkout[currentStepIndex].isRest && !currentWorkout[currentStepIndex].isMiniSet) {
+                                playBeep(false);
+                            }
+                            if (nextVal === 3 || nextVal === 2 || nextVal === 1) {
+                                playBeep(nextVal === 1);
+                            }
+                            return nextVal;
+                        });
+                        setTotalSessionTime(prev => (prev > 0 ? prev - 1 : 0));
+                    }, 1000);
+                } else if (isWorkoutActive && !isPaused && !isCountdownActive && stepTimer === 0) {
+                    if (currentStepIndex < currentWorkout.length - 1) {
+                        const nextIndex = currentStepIndex + 1;
+                        setCurrentStepIndex(nextIndex);
+                        setCountdownTimer(5);
+                        setIsCountdownActive(true);
+                    } else {
+                        setIsWorkoutActive(false);
+                        setIsCompleted(true);
+                        recordSessionCompletion();
+                        if (audioRef.current) audioRef.current.pause();
+                        setSelectedQuote(MILITARY_QUOTES[Math.floor(Math.random() * MILITARY_QUOTES.length)]);
+                    }
+                }
+                return () => clearInterval(interval);
+            }, [isWorkoutActive, isPaused, isCountdownActive, stepTimer, currentStepIndex, currentWorkout]);
+
+            const startWorkout = () => {
+                if (currentWorkout.length === 0) return;
+                const randomTrackNum = Math.floor(Math.random() * 9) + 1;
+                setCurrentTrack(`pista${randomTrackNum}.mp3`);
+
+                setIsCompleted(false);
+                setIsPaused(false);
+                setCurrentStepIndex(0);
+                setCountdownTimer(5);
+                setIsCountdownActive(true);
+                setIsWorkoutActive(true);
+
+                setTimeout(() => {
+                    if (audioRef.current) {
+                        audioRef.current.load();
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.volume = 0.7;
+                        audioRef.current.play().catch(e => console.log(e));
+                    }
+                }, 100);
+            };
+
+            const stopWorkout = () => {
+                setIsWorkoutActive(false);
+                setIsPaused(false);
+                setIsCountdownActive(false);
+                setIsCompleted(false);
+                if (audioRef.current) audioRef.current.pause();
+                generateWorkoutForDay(selectedDayIndex, difficultyMode);
+            };
+
+            const formatMinutes = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            };
+
+            const sortedRank = Object.entries(userStats).sort((a, b) => b[1] - a[1]);
+            const firstScore = sortedRank[0]?.[1] || 0;
+            const tiedFighters = sortedRank.filter(([name, score]) => score === firstScore && score > 0);
+            const isTie = tiedFighters.length > 1;
+
+            const activeExercise = currentWorkout[currentStepIndex];
+            const currentDayName = DAYS_MAP[selectedDayIndex]?.name || "Rest Day";
+
+            return (
+                <div className="max-w-3xl mx-auto p-3">
+                    <audio ref={audioRef} src={`musica/${currentTrack}`} loop />
+
+                    {/* Cabecera superior y botón de sincronización Cloud */}
+                    <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-2.5 px-4 rounded-xl shadow-md mb-3 flex items-center justify-between border border-blue-400/30">
+                        <div>
+                            <span className="text-[9px] uppercase tracking-widest text-blue-200 font-bold block">Performance Program</span>
+                            <h1 className="text-lg font-black text-white tracking-wide leading-none drop-shadow-sm">
+                                WORKOUT SESSION
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setShowCloudModal(true)}
+                                className="bg-black/40 hover:bg-black/60 text-amber-300 text-xs font-semibold px-2.5 py-1 rounded-lg border border-amber-400/40 transition flex items-center gap-1 shadow">
+                                ☁️ {cloudBinId ? "Cloud Sync (On)" : "Config Cloud"}
+                            </button>
+                            <span className="bg-black/30 text-gray-300 text-[9px] font-mono px-2 py-0.5 rounded-full border border-white/10">
+                                {APP_VERSION}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Selector de Módulos (Workout Normal vs 7-Week Striking Program) */}
+                    <div className="flex gap-2 mb-3">
+                        <button
+                            onClick={() => setActiveTab("main")}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold transition border ${activeTab === "main" ? 'bg-blue-600 text-white border-blue-400 shadow' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'}`}>
+                            🏋️ Entrenamiento General
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("tkd_program")}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold transition border ${activeTab === "tkd_program" ? 'bg-amber-600 text-white border-amber-400 shadow' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'}`}>
+                            🥋 7-Week Striking Program (Ap Chagi & Yop Chagi)
+                        </button>
+                    </div>
+
+                    {/* VISTA 1: MÓDULO DE PATADAS 7 SEMANAS */}
+                    {activeTab === "tkd_program" ? (
+                        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 className="text-base font-black text-amber-400">Taekwondo Striking Mastery</h2>
+                                    <p className="text-xs text-gray-400">Especialización de 7 semanas para Ap Chagi y Yop Chagi (Fijación e Impacto)</p>
+                                </div>
+                                <select 
+                                    value={selectedWeek} 
+                                    onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                                    className="bg-gray-900 text-amber-300 border border-amber-500/50 rounded-lg p-2 text-xs font-bold focus:outline-none">
+                                    {[1, 2, 3, 4, 5, 6, 7].map(w => (
+                                        <option key={w} value={w}>Semana {w} / 7</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {TKD_PROGRAM[selectedWeek] && (
+                                <div className="space-y-4">
+                                    <div className="bg-gray-900/80 p-3.5 rounded-xl border border-amber-500/30">
+                                        <span className="text-[10px] uppercase font-mono text-amber-400 font-bold block">{TKD_PROGRAM[selectedWeek].title}</span>
+                                        <h3 className="text-sm font-bold text-white mt-0.5">Enfoque: {TKD_PROGRAM[selectedWeek].focus}</h3>
+                                        <p className="text-xs text-gray-300 mt-1">{TKD_PROGRAM[selectedWeek].desc}</p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider">Ejercicios de la Semana {selectedWeek}:</h4>
+                                        {TKD_PROGRAM[selectedWeek].drills.map((drill, idx) => (
+                                            <div key={idx} className="bg-gray-900 p-3 rounded-xl border border-gray-700 flex flex-col gap-1">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs font-bold text-white">📌 {drill.name}</span>
+                                                    <span className="text-xs font-mono text-green-400 bg-green-950/40 px-2 py-0.5 rounded border border-green-500/30">{drill.reps}</span>
+                                                </div>
+                                                <p className="text-[11px] text-gray-400">{drill.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="bg-amber-950/30 border border-amber-500/40 p-3 rounded-xl text-center">
+                                        <p className="text-xs text-amber-300 font-semibold">💡 Consejo del Maestro:</p>
+                                        <p className="text-[11px] text-gray-300 mt-1">Mantén el talón firmemente dirigido al objetivo en el Yop Chagi y el metatarso proyectado en el Ap Chagi. No sacrifiques la fijación de 3 segundos por hacer más repeticiones.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        /* VISTA 2: WORKOUT GENERAL ORIGINAL */
+                        <>
+                            {!isWorkoutActive && !isCompleted && (
+                                <>
+                                    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 shadow-md">
+                                        <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block mb-2">Select Fighter Profile</span>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {Object.keys(FIGHTERS_CONFIG).map((fighterKey) => {
+                                                const fighter = FIGHTERS_CONFIG[fighterKey];
+                                                const isSelected = selectedFighter === fighterKey;
+                                                return (
+                                                    <button
+                                                        key={fighterKey}
+                                                        onClick={() => setSelectedFighter(fighterKey)}
+                                                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition gap-1 ${isSelected ? `bg-gradient-to-b ${fighter.bgColor}${fighter.borderColor} ring-2 ring-white/50 shadow-lg scale-105` : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}
+                                                    >
+                                                        <img src={fighter.avatarImg} alt={fighter.name} className="w-10 h-10 object-cover rounded-full border border-white/20 shadow" />
+                                                        <span className="font-bold text-xs text-white">{fighter.name}</span>
+                                                        <span className="text-[10px] text-gray-300 font-mono">Score: {userStats[fighterKey] || 0} pts</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 shadow-md">
+                                        <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block mb-2">Select Difficulty Mode</span>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {Object.keys(DIFFICULTIES_CONFIG).map((modeKey) => {
+                                                const mode = DIFFICULTIES_CONFIG[modeKey];
+                                                const isSelected = difficultyMode === modeKey;
+                                                return (
+                                                    <button
+                                                        key={modeKey}
+                                                        onClick={() => setDifficultyMode(modeKey)}
+                                                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition gap-1 ${isSelected ? 'bg-amber-600/90 border-amber-400 ring-2 ring-white/50 shadow-lg scale-105' : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}
+                                                    >
+                                                        <img src={mode.img} alt={mode.name} className="w-10 h-10 object-cover rounded-full border border-white/20 shadow" />
+                                                        <span className="font-bold text-xs text-white">{mode.name} (+{mode.points})</span>
+                                                        <span className="text-[9px] text-gray-300">{mode.desc}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-3 flex flex-col md:flex-row justify-between items-center gap-3">
+                                        <div>
+                                            <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Active: <strong className="text-amber-400">{selectedFighter}</strong> ({difficultyMode})</span>
+                                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                                📅 {currentDayName} 
+                                            </h2>
+                                            <p className="text-xs text-gray-400">{DAYS_MAP[selectedDayIndex]?.title}</p>
+                                        </div>
+
+                                        <div className="flex flex-col items-end">
+                                            <label className="text-xs text-gray-400 mb-1">Change day manually:</label>
+                                            <select 
+                                                value={selectedDayIndex} 
+                                                onChange={(e) => setSelectedDayIndex(Number(e.target.value))}
+                                                className="bg-gray-900 text-white border border-gray-700 rounded p-1.5 text-xs focus:outline-none focus:border-blue-500">
+                                                <option value={1}>Monday (Push + Core)</option>
+                                                <option value={3}>Wednesday (Pull + Legs)</option>
+                                                <option value={5}>Friday (Dynamic Fullbody)</option>
+                                                <option value={6}>Saturday (Express Burnout)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4">
+                                        <h3 className="text-xs text-amber-400 font-bold uppercase tracking-widest mb-3 text-center">🏆 Escuela JeongSin Ranking Podium</h3>
+                                        <div className="grid grid-cols-3 gap-3 text-center">
+                                            {sortedRank.map(([name, count], index) => {
+                                                const fighter = FIGHTERS_CONFIG[name];
+                                                const medals = ["🥇", "🥈", "🥉"];
+                                                return (
+                                                    <div key={name} className="bg-gray-900/90 border border-gray-700 p-3 rounded-xl flex flex-col items-center justify-between shadow-inner">
+                                                        <span className="text-lg mb-1">{medals[index]}</span>
+                                                        <img src={fighter.avatarImg} alt={name} className="w-10 h-10 object-cover rounded-full border border-white/20 mb-1 shadow" />
+                                                        <span className="text-xs font-bold text-white">{name}</span>
+                                                        <span className="text-xs text-green-400 font-mono font-bold">{count} pts</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {isTie && (
+                                            <div className="mt-4 p-3 bg-red-950/40 border border-red-500/50 rounded-xl text-center">
+                                                <span className="text-[10px] uppercase font-mono tracking-widest text-red-400 font-bold block mb-2">⚡ Clash of Titans (Empate Detectado) ⚡</span>
+                                                <div className="flex items-center justify-center gap-6 py-2">
+                                                    {tiedFighters.map(([name], idx) => {
+                                                        const fighter = FIGHTERS_CONFIG[name];
+                                                        return (
+                                                            <div key={name} className={`flex items-center gap-2 animate-bounce ${idx === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                                                                <img src={fighter.avatarImg} alt={name} className="w-11 h-11 object-cover rounded-full border-2 border-red-400 shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                                                                <span className="text-xs font-black text-white">{name}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <button 
+                                        onClick={startWorkout}
+                                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-black py-4 px-6 rounded-xl shadow-lg border border-green-400/40 text-base tracking-wider uppercase transition transform active:scale-95">
+                                        🚀 Iniciar Sesión de Entrenamiento
+                                    </button>
+                                </>
+                            )}
+
+                            {isWorkoutActive && (
+                                <div className="bg-gray-800 p-5 rounded-2xl border-2 border-blue-500 shadow-2xl text-center">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-xs font-mono bg-blue-950 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">
+                                            Paso {currentStepIndex + 1} de {currentWorkout.length}
+                                        </span>
+                                        <span className="text-xs font-mono text-amber-400 font-bold">
+                                            ⏱️ Restante: {formatMinutes(totalSessionTime)}
+                                        </span>
+                                    </div>
+
+                                    {isCountdownActive ? (
+                                        <div className="py-12 flex flex-col items-center justify-center bg-gray-900 rounded-xl border border-gray-700 my-3">
+                                            <span className="text-xs text-amber-400 uppercase tracking-widest font-bold mb-2">Prepárate</span>
+                                            <span className="text-7xl font-black text-white animate-pulse">{countdownTimer}</span>
+                                            <span className="text-sm text-gray-300 mt-4 font-semibold">{activeExercise.name}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="relative">
+                                                {activeExercise.isRest ? (
+                                                    <div className="h-56 bg-amber-950/40 border border-amber-500/30 rounded-xl flex flex-col items-center justify-center p-4">
+                                                        <span className="text-4xl mb-2">⏳</span>
+                                                        <h3 className="text-2xl font-black text-amber-400 uppercase">{activeExercise.name}</h3>
+                                                        <p className="text-xs text-gray-300 mt-1">{activeExercise.value}</p>
+                                                    </div>
+                                                ) : activeExercise.isMiniSet ? (
+                                                    <div className="grid grid-cols-2 gap-2 h-56">
+                                                        {activeExercise.exercises.map((ex, i) => (
+                                                            <div key={i} className="relative bg-black rounded-xl overflow-hidden border border-gray-700">
+                                                                <ExerciseVideo filename={ex.filename} className="w-full h-full opacity-70" />
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent flex items-end p-2">
+                                                                    <span className="text-[11px] font-bold text-white leading-tight">{ex.name}</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="h-64 bg-black rounded-xl overflow-hidden border border-gray-700 relative">
+                                                        <ExerciseVideo filename={activeExercise.filename} className="w-full h-full" />
+                                                        <div className="absolute top-2 left-2 bg-black/70 px-2.5 py-1 rounded-md border border-white/10 text-[10px] uppercase font-mono text-blue-300">
+                                                            {activeExercise.mode}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <h3 className="text-xl font-black text-white">{activeExercise.name}</h3>
+                                                <p className="text-sm text-amber-400 font-mono mt-0.5">{activeExercise.value}</p>
+                                            </div>
+
+                                            <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                                                <span className="text-xs text-gray-400 font-mono">TIEMPO RESTANTE</span>
+                                                <span className="text-3xl font-black font-mono text-green-400">{stepTimer}s</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-2 mt-4">
+                                        <button 
+                                            onClick={() => setIsPaused(!isPaused)}
+                                            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2.5 rounded-xl transition text-xs">
+                                            {isPaused ? "▶️ Reanudar" : "⏸️ Pausar"}
+                                        </button>
+                                        <button 
+                                            onClick={stopWorkout}
+                                            className="flex-1 bg-red-900/80 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl transition text-xs border border-red-500/40">
+                                            ❌ Terminar Sesión
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isCompleted && (
+                                <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 rounded-2xl border-2 border-amber-500 shadow-2xl text-center">
+                                    <span className="text-6xl mb-4 block">🎖️</span>
+                                    <h2 className="text-2xl font-black text-amber-400 uppercase mb-2">¡Sesión Completada con Éxito!</h2>
+                                    <p className="text-xs text-gray-300 mb-6">Puntos sumados para tu luchador <strong className="text-amber-300">{selectedFighter}</strong> en modo <strong className="text-amber-300">{difficultyMode}</strong>.</p>
+                                    <button 
+                                        onClick={() => setIsCompleted(false)}
+                                        className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-8 rounded-xl shadow text-xs uppercase tracking-wider transition">
+                                        Volver al Menú Principal
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* MODAL DE CONFIGURACIÓN CLOUD (JSONBin.io) */}
+                    {showCloudModal && (
+                        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                            <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                                <h3 className="text-base font-bold text-amber-400 mb-2">☁️ Configurar Sincronización Cloud</h3>
+                                <p className="text-xs text-gray-300 mb-4">Introduce tu Bin ID de JSONBin.io para sincronizar las puntuaciones entre tus diferentes dispositivos automáticamente.</p>
+                                
+                                <form onSubmit={handleSaveCloudConfig} className="space-y-3">
+                                    <div>
+                                        <label className="text-xs text-gray-400 block mb-1">Bin ID:</label>
+                                        <input 
+                                            type="text" 
+                                            value={cloudBinId} 
+                                            onChange={(e) => setCloudBinId(e.target.value)}
+                                            placeholder="Ej. 65f1234... o ID de bin" 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 block mb-1">API Key (Opcional si es privado):</label>
+                                        <input 
+                                            type="password" 
+                                            value={cloudApiKey} 
+                                            onChange={(e) => setCloudApiKey(e.target.value)}
+                                            placeholder="$2a$10$..." 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex gap-2 pt-2">
+                                        <button 
+                                            type="submit" 
+                                            className="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition">
+                                            Guardar y Conectar
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowCloudModal(false)}
+                                            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-xs transition">
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
