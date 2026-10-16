@@ -13,7 +13,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const APP_VERSION = "v1.50-Striking";
+        const APP_VERSION = "v1.51-StrikingVisual";
 
         const RAW_VIDEOS_LIST = [
             "body_abdominal_01.mp4", "body_abdominal_02.mp4", "body_abdominal_03.mp4",
@@ -75,7 +75,7 @@
             }
         };
 
-        // Programa de 7 semanas para Ap Chagi y Yop Chagi
+        // Programa de 7 semanas para Ap Chagi y Yop Chagi con iconos esquemáticos (stick figures / guías)
         const TKD_PROGRAM = {
             1: {
                 week: 1,
@@ -83,8 +83,18 @@
                 focus: "Ap Chagi / Yop Chagi Base",
                 desc: "Subida máxima de rodilla al pecho y mantenimiento del equilibrio estático.",
                 drills: [
-                    { name: "Cámara Estática Ap Chagi (Rodilla arriba)", reps: "3 series x 30s por pierna", desc: "Eleva la rodilla al pecho al máximo manteniendo el pie en tensión." },
-                    { name: "Cámara Lateral Yop Chagi contra pared", reps: "3 series x 30s por pierna", desc: "Apóyate en la pared, sube la rodilla y rota el talón hacia afuera." }
+                    { 
+                        name: "Cámara Estática Ap Chagi (Rodilla arriba)", 
+                        reps: "3 series x 30s por pierna", 
+                        desc: "Eleva la rodilla al pecho al máximo manteniendo el pie en tensión.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-amber-400 fill-none stroke-2"><circle cx="50" cy="20" r="10"/><path d="M50 30 L50 65 M50 40 L35 55 M50 40 L65 55 M50 65 L40 90 M50 65 L60 45" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Cámara Lateral Yop Chagi contra pared", 
+                        reps: "3 series x 30s por pierna", 
+                        desc: "Apóyate en la pared, sube la rodilla y rota el talón hacia afuera.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-amber-400 fill-none stroke-2"><circle cx="40" cy="20" r="10"/><path d="M40 30 L40 65 M40 40 L25 55 M40 40 L60 50 M40 65 L30 90 M40 65 L55 60" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             },
             2: {
@@ -93,8 +103,18 @@
                 focus: "Ap Chagi / Yop Chagi Base",
                 desc: "Fortalecimiento de abductores y flexores de cadera para evitar caída de pelvis.",
                 drills: [
-                    { name: "Elevaciones laterales de pierna estricta", reps: "4 series x 15 reps", desc: "Sin inercia, controlando la bajada." },
-                    { name: "Mantenimiento de rodilla alta en isometría", reps: "3 series x 45s", desc: "Sostén la pierna elevada sin ayuda de las manos." }
+                    { 
+                        name: "Elevaciones laterales de pierna estricta", 
+                        reps: "4 series x 15 reps", 
+                        desc: "Sin inercia, controlando la bajada.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-blue-400 fill-none stroke-2"><circle cx="50" cy="20" r="10"/><path d="M50 30 L50 70 M50 40 L30 50 M50 40 L70 50 M50 70 L40 95 M50 70 L75 70" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Mantenimiento de rodilla alta en isometría", 
+                        reps: "3 series x 45s", 
+                        desc: "Sostén la pierna elevada sin ayuda de las manos.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-blue-400 fill-none stroke-2"><circle cx="50" cy="20" r="10"/><path d="M50 30 L50 65 M50 40 L35 55 M50 40 L65 55 M50 65 L40 90 M50 65 L60 55" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             },
             3: {
@@ -103,8 +123,18 @@
                 focus: "Extensión Máxima y Snap",
                 desc: "Trabajar la fijación estática de 3 segundos en el punto exacto de impacto.",
                 drills: [
-                    { name: "Ap Chagi Lento con Bloqueo (3s)", reps: "4 series x 10 reps", desc: "Extiende la pierna con el metatarso y mantén 3s rígido antes de recoger." },
-                    { name: "Yop Chagi Lento con Fijación de Talón", reps: "4 series x 10 reps", desc: "Empuja con el talón, bloquea rodilla y cadera 3s en extensión total." }
+                    { 
+                        name: "Ap Chagi Lento con Bloqueo (3s)", 
+                        reps: "4 series x 10 reps", 
+                        desc: "Extiende la pierna con el metatarso y mantén 3s rígido antes de recoger.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-emerald-400 fill-none stroke-2"><circle cx="40" cy="20" r="10"/><path d="M40 30 L45 65 M40 40 L25 45 M40 40 L60 35 M45 65 L35 90 M45 65 L85 55" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Yop Chagi Lento con Fijación de Talón", 
+                        reps: "4 series x 10 reps", 
+                        desc: "Empuja con el talón, bloquea rodilla y cadera 3s en extensión total.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-emerald-400 fill-none stroke-2"><circle cx="35" cy="25" r="10"/><path d="M35 35 L40 70 M35 45 L20 50 M35 45 L55 55 M40 70 L30 95 M40 70 L90 70" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             },
             4: {
@@ -113,8 +143,18 @@
                 focus: "Transición Cámara -> Impacto -> Recogida",
                 desc: "Mejorar la velocidad de salida y el retorno rápido de la pierna.",
                 drills: [
-                    { name: "Patadas al aire a máxima velocidad", reps: "3 series x 45s continuos", desc: "Alterna Ap Chagi y Yop Chagi buscando chasquido seco." },
-                    { name: "Sostén isométrico al 90% de extensión", reps: "3 series x 30s", desc: "Mantén la pierna casi estirada temblando de tensión." }
+                    { 
+                        name: "Patadas al aire a máxima velocidad", 
+                        reps: "3 series x 45s continuos", 
+                        desc: "Alterna Ap Chagi y Yop Chagi buscando chasquido seco.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-purple-400 fill-none stroke-2"><circle cx="50" cy="20" r="10"/><path d="M50 30 L50 65 M50 40 L30 35 M50 40 L75 30 M50 65 L40 90 M50 65 L85 65" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Sostén isométrico al 90% de extensión", 
+                        reps: "3 series x 30s", 
+                        desc: "Mantén la pierna casi estirada temblando de tensión.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-purple-400 fill-none stroke-2"><circle cx="35" cy="25" r="10"/><path d="M35 35 L40 70 M35 45 L20 50 M35 45 L55 55 M40 70 L30 95 M40 70 L80 65" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             },
             5: {
@@ -123,8 +163,18 @@
                 focus: "Resistencia Muscular y Cadencia",
                 desc: "Series continuas por tiempo para simular combate real sin perder la técnica.",
                 drills: [
-                    { name: "Ap Chagi Continuo por Intervalos", reps: "4 series x 1 min (15s descanso)", desc: "Ritmo constante manteniendo la altura del golpe." },
-                    { name: "Yop Chagi Continuo por Intervalos", reps: "4 series x 1 min (15s descanso)", desc: "Golpeo lateral con empuje de talón constante." }
+                    { 
+                        name: "Ap Chagi Continuo por Intervalos", 
+                        reps: "4 series x 1 min (15s descanso)", 
+                        desc: "Ritmo constante manteniendo la altura del golpe.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-amber-400 fill-none stroke-2"><circle cx="45" cy="20" r="10"/><path d="M45 30 L45 65 M45 40 L25 45 M45 40 L65 35 M45 65 L35 90 M45 65 L80 50" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Yop Chagi Continuo por Intervalos", 
+                        reps: "4 series x 1 min (15s descanso)", 
+                        desc: "Golpeo lateral con empuje de talón constante.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-amber-400 fill-none stroke-2"><circle cx="35" cy="25" r="10"/><path d="M35 35 L40 70 M35 45 L20 50 M35 45 L55 55 M40 70 L30 95 M40 70 L85 70" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             },
             6: {
@@ -133,8 +183,18 @@
                 focus: "Control del Eje Corporal",
                 desc: "Ejecución de patadas manteniendo el tronco perfectamente erguido.",
                 drills: [
-                    { name: "Combinación Ap Chagi + Yop Chagi", reps: "4 series x 45s", desc: "Sin apoyar el pie en el suelo entre ambas patadas." },
-                    { name: "Patada frontal con parada de 5s en impacto", reps: "3 series x 10 reps", desc: "Fijación extrema de la punta del pie." }
+                    { 
+                        name: "Combinación Ap Chagi + Yop Chagi", 
+                        reps: "4 series x 45s", 
+                        desc: "Sin apoyar el pie en el suelo entre ambas patadas.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-cyan-400 fill-none stroke-2"><circle cx="50" cy="20" r="10"/><path d="M50 30 L50 65 M50 40 L30 50 M50 40 L70 50 M50 65 L40 90 M50 65 L80 60" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Patada frontal con parada de 5s en impacto", 
+                        reps: "3 series x 10 reps", 
+                        desc: "Fijación extrema de la punta del pie.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-cyan-400 fill-none stroke-2"><circle cx="40" cy="20" r="10"/><path d="M40 30 L45 65 M40 40 L25 45 M40 40 L60 35 M45 65 L35 90 M45 65 L85 55" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             },
             7: {
@@ -143,8 +203,18 @@
                 focus: "Examen Final de Patadas",
                 desc: "Integración total de cámara, bloqueo de 5 segundos y velocidad explosiva.",
                 drills: [
-                    { name: "Test Supremo Yop Chagi (5s Lockout)", reps: "5 series x 10 reps perfectas", desc: "Cada patada exige 5 segundos exactos de fijación con talón." },
-                    { name: "Circuito Mixto Ap Chagi + Yop Chagi Tabata", reps: "4 rounds (20s trabajo / 10s descanso)", desc: "Máximo número de impactos limpios posibles." }
+                    { 
+                        name: "Test Supremo Yop Chagi (5s Lockout)", 
+                        reps: "5 series x 10 reps perfectas", 
+                        desc: "Cada patada exige 5 segundos exactos de fijación con talón.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-red-400 fill-none stroke-2"><circle cx="35" cy="25" r="10"/><path d="M35 35 L40 70 M35 45 L20 50 M35 45 L55 55 M40 70 L30 95 M40 70 L95 70" stroke-linecap="round"/></svg>` 
+                    },
+                    { 
+                        name: "Circuito Mixto Ap Chagi + Yop Chagi Tabata", 
+                        reps: "4 rounds (20s trabajo / 10s descanso)", 
+                        desc: "Máximo número de impactos limpios posibles.",
+                        iconSvg: `<svg viewBox="0 0 100 100" class="w-12 h-12 stroke-red-400 fill-none stroke-2"><circle cx="50" cy="20" r="10"/><path d="M50 30 L50 65 M50 40 L25 35 M50 40 L75 35 M50 65 L35 90 M50 65 L85 65" stroke-linecap="round"/></svg>` 
+                    }
                 ]
             }
         };
@@ -236,11 +306,9 @@
             const [selectedFighter, setSelectedFighter] = React.useState("Flat");
             const [difficultyMode, setDifficultyMode] = React.useState("Guerrero");
             
-            // Estado para alternar entre el Workout normal y el Módulo de Patadas
-            const [activeTab, setActiveTab] = React.useState("main"); // "main" o "tkd_program"
+            const [activeTab, setActiveTab] = React.useState("main"); 
             const [selectedWeek, setSelectedWeek] = React.useState(1);
 
-            // Cloud Sync (JSONBin.io) config
             const [cloudBinId, setCloudBinId] = React.useState(() => localStorage.getItem('jeongsin_cloud_bin_id') || '');
             const [cloudApiKey, setCloudApiKey] = React.useState(() => localStorage.getItem('jeongsin_cloud_api_key') || '');
             const [showCloudModal, setShowCloudModal] = React.useState(false);
@@ -589,7 +657,6 @@
                 <div className="max-w-3xl mx-auto p-3">
                     <audio ref={audioRef} src={`musica/${currentTrack}`} loop />
 
-                    {/* Cabecera superior y botón de sincronización Cloud */}
                     <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-2.5 px-4 rounded-xl shadow-md mb-3 flex items-center justify-between border border-blue-400/30">
                         <div>
                             <span className="text-[9px] uppercase tracking-widest text-blue-200 font-bold block">Performance Program</span>
@@ -609,7 +676,6 @@
                         </div>
                     </div>
 
-                    {/* Selector de Módulos (Workout Normal vs 7-Week Striking Program) */}
                     <div className="flex gap-2 mb-3">
                         <button
                             onClick={() => setActiveTab("main")}
@@ -623,13 +689,12 @@
                         </button>
                     </div>
 
-                    {/* VISTA 1: MÓDULO DE PATADAS 7 SEMANAS */}
                     {activeTab === "tkd_program" ? (
                         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
                             <div className="flex justify-between items-center mb-4">
                                 <div>
                                     <h2 className="text-base font-black text-amber-400">Taekwondo Striking Mastery</h2>
-                                    <p className="text-xs text-gray-400">Especialización de 7 semanas para Ap Chagi y Yop Chagi (Fijación e Impacto)</p>
+                                    <p className="text-xs text-gray-400">Especialización de 7 semanas para Ap Chagi y Yop Chagi</p>
                                 </div>
                                 <select 
                                     value={selectedWeek} 
@@ -650,14 +715,19 @@
                                     </div>
 
                                     <div className="space-y-3">
-                                        <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider">Ejercicios de la Semana {selectedWeek}:</h4>
+                                        <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider">Ejercicios y Guía Técnica (Stick Figure):</h4>
                                         {TKD_PROGRAM[selectedWeek].drills.map((drill, idx) => (
-                                            <div key={idx} className="bg-gray-900 p-3 rounded-xl border border-gray-700 flex flex-col gap-1">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs font-bold text-white">📌 {drill.name}</span>
-                                                    <span className="text-xs font-mono text-green-400 bg-green-950/40 px-2 py-0.5 rounded border border-green-500/30">{drill.reps}</span>
+                                            <div key={idx} className="bg-gray-900 p-3.5 rounded-xl border border-gray-700 flex items-center gap-4">
+                                                <div className="bg-gray-950 p-2 rounded-xl border border-gray-800 flex-shrink-0 flex items-center justify-center">
+                                                    <div dangerouslySetInnerHTML={{ __html: drill.iconSvg }} />
                                                 </div>
-                                                <p className="text-[11px] text-gray-400">{drill.desc}</p>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-xs font-bold text-white">📌 {drill.name}</span>
+                                                        <span className="text-[11px] font-mono text-green-400 bg-green-950/40 px-2 py-0.5 rounded border border-green-500/30">{drill.reps}</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-400">{drill.desc}</p>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -670,7 +740,6 @@
                             )}
                         </div>
                     ) : (
-                        /* VISTA 2: WORKOUT GENERAL ORIGINAL */
                         <>
                             {!isWorkoutActive && !isCompleted && (
                                 <>
@@ -871,7 +940,6 @@
                         </>
                     )}
 
-                    {/* MODAL DE CONFIGURACIÓN CLOUD (JSONBin.io) */}
                     {showCloudModal && (
                         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
                             <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-md w-full shadow-2xl">
@@ -885,12 +953,12 @@
                                             type="text" 
                                             value={cloudBinId} 
                                             onChange={(e) => setCloudBinId(e.target.value)}
-                                            placeholder="Ej. 65f1234... o ID de bin" 
+                                            placeholder="Ej. 65f1234..." 
                                             className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 block mb-1">API Key (Opcional si es privado):</label>
+                                        <label className="text-xs text-gray-400 block mb-1">API Key (Opcional):</label>
                                         <input 
                                             type="password" 
                                             value={cloudApiKey} 
